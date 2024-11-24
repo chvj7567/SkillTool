@@ -222,7 +222,7 @@ public class CHContBase : MonoBehaviour
                     Vector3 posMy = transform.position;
                     Vector3 dirMy = Vector3.zero;
 
-                    switch (_targetTracker.standardAxis)
+                    switch (_targetTracker.StandardAxis)
                     {
                         case DefEnum.EStandardAxis.X:
                             {

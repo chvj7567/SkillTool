@@ -211,18 +211,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6f75748585518141a8f76a826b9ecc3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  standardAxis: 1
-  targetMask:
+  _standardAxis: 1
+  _targetMask:
     serializedVersion: 2
     m_Bits: 0
-  ignoreMask:
+  _ignoreMask:
     serializedVersion: 2
     m_Bits: 0
-  range: 0
-  rangeMulti: 2
-  rangeMultiTime: 3
-  viewAngle: 0
-  viewEditor: 0
+  _range: 0
+  _rangeMulti: 2
+  _rangeMultiTime: 3
+  _viewAngle: 0
+  _viewEditor: 0
   _orgRangeMulti: -1
   _orgViewAngle: -1
   _skill1Distance: -1

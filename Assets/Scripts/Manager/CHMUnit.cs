@@ -115,7 +115,7 @@ public class CHMUnit : CHSingleton<CHMUnit>
         CHTargetTracker targetTracker = unit.GetComponent<CHTargetTracker>();
         if (targetTracker != null)
         {
-            targetTracker.targetMask = 1 << (int)eLayer;
+            targetTracker.SetTargetMask(1 << (int)eLayer);
         }
     }
     #endregion
@@ -198,7 +198,7 @@ public class CHMUnit : CHSingleton<CHMUnit>
                 if (liTargetTracker != null)
                     liTargetTracker.Add(targetTracker);
                 if (liTargetMask != null)
-                    liTargetMask.Add(targetTracker.targetMask);
+                    liTargetMask.Add(targetTracker.TargetMask);
             }
         });
     }

@@ -9,14 +9,14 @@ using UnityEngine.AI;
 public class CHTargetTracker : MonoBehaviour
 {
     [Header("타겟 감지 설정")]
-    public DefEnum.EStandardAxis standardAxis; // 정면 기준이 될 축
-    public LayerMask targetMask; // 타겟이 될 레이어
-    public LayerMask ignoreMask; // 무시할 레이어
-    public float range; // 타겟을 감지할 범위
-    public float rangeMulti = 2; // 타겟을 감지 후 늘어나는 시야 배수
-    public float rangeMultiTime = 3; // 타겟을 감지 후 시야가 늘어나는 시간(초)
-    [Range(0, 360)] public float viewAngle; // 타겟을 감지할 시야각
-    public bool viewEditor; // 에디터 상에서 시야각 확인 여부
+    [SerializeField] DefEnum.EStandardAxis _standardAxis; // 정면 기준이 될 축
+    [SerializeField] LayerMask _targetMask; // 타겟이 될 레이어
+    [SerializeField] LayerMask _ignoreMask; // 무시할 레이어
+    [SerializeField] float _range; // 타겟을 감지할 범위
+    [SerializeField] float _rangeMulti = 2; // 타겟을 감지 후 늘어나는 시야 배수
+    [SerializeField] float _rangeMultiTime = 3; // 타겟을 감지 후 시야가 늘어나는 시간(초)
+    [SerializeField, Range(0, 360)] float _viewAngle; // 타겟을 감지할 시야각
+    [SerializeField] bool _viewEditor; // 에디터 상에서 시야각 확인 여부
 
     [Header("원본 값")]
     [SerializeField, ReadOnly] float _orgRangeMulti = -1f;
@@ -34,7 +34,17 @@ public class CHTargetTracker : MonoBehaviour
     [Header("근접 타겟")]
     [SerializeField, ReadOnly] DefClass.TargetInfo _closestTarget = new DefClass.TargetInfo();
 
-    #region Get
+    #region Setter
+    public void SetTargetMask(int layer)
+    {
+        _targetMask = layer;
+    }
+    #endregion
+
+    #region Getter
+    public DefEnum.EStandardAxis StandardAxis => _standardAxis;
+    public LayerMask TargetMask => _targetMask;
+
     public DefClass.TargetInfo GetClosestTargetInfo()
     {
         return _closestTarget;
@@ -60,7 +70,7 @@ public class CHTargetTracker : MonoBehaviour
                 float targetDis = Vector3.Distance(originPos, posTarget);
 
                 // 장애물이 있는지 확인
-                if (Physics.Raycast(originPos, dirTarget, targetDis, ~(lmTarget | ignoreMask)) == false)
+                if (Physics.Raycast(originPos, dirTarget, targetDis, ~(lmTarget | _ignoreMask)) == false)
                 {
                     var unitBase = target.GetComponent<CHUnitBase>();
                     // 타겟이 살아있으면 타겟으로 지정
@@ -104,7 +114,7 @@ public class CHTargetTracker : MonoBehaviour
 
     private void Start()
     {
-        _mover.Init(standardAxis);
+        _mover.Init(_standardAxis);
 
         NavMeshAgent agent = _mover.Agent;
         CHUnitBase unitData = _mover.UnitData;
@@ -124,16 +134,16 @@ public class CHTargetTracker : MonoBehaviour
                 return;
 
             //# 시야 범위 안에 들어온 타겟 중 제일 가까운 타겟 감지
-            switch (standardAxis)
+            switch (_standardAxis)
             {
                 case DefEnum.EStandardAxis.X:
                     {
-                        _closestTarget = GetClosestTargetInfo(transform.position, transform.right, targetMask, range * rangeMulti, viewAngle);
+                        _closestTarget = GetClosestTargetInfo(transform.position, transform.right, _targetMask, _range * _rangeMulti, _viewAngle);
                     }
                     break;
                 case DefEnum.EStandardAxis.Z:
                     {
-                        _closestTarget = GetClosestTargetInfo(transform.position, transform.forward, targetMask, range * rangeMulti, viewAngle);
+                        _closestTarget = GetClosestTargetInfo(transform.position, transform.forward, _targetMask, _range * _rangeMulti, _viewAngle);
                     }
                     break;
             }
@@ -189,17 +199,17 @@ public class CHTargetTracker : MonoBehaviour
         if (_mover.UnitData)
             isDead = _mover.UnitData.IsDeath();
 
-        if (viewEditor && isDead == false)
+        if (_viewEditor && isDead == false)
         {
             Gizmos.color = Color.blue;
-            Gizmos.DrawWireSphere(transform.position, range * rangeMulti);
+            Gizmos.DrawWireSphere(transform.position, _range * _rangeMulti);
 
-            // 시야각의 경계선
-            Vector3 left = transform.Angle(-viewAngle * 0.5f, standardAxis);
-            Vector3 right = transform.Angle(viewAngle * 0.5f, standardAxis);
+            //# 시야각의 경계선
+            Vector3 left = transform.Angle(-_viewAngle * 0.5f, _standardAxis);
+            Vector3 right = transform.Angle(_viewAngle * 0.5f, _standardAxis);
 
-            Debug.DrawRay(transform.position, left * range, Color.green);
-            Debug.DrawRay(transform.position, right * range, Color.green);
+            Debug.DrawRay(transform.position, left * _range, Color.green);
+            Debug.DrawRay(transform.position, right * _range, Color.green);
         }
     }
 
@@ -208,12 +218,12 @@ public class CHTargetTracker : MonoBehaviour
         if (unitBase == null)
             return;
 
-        range = unitBase.GetCurrentRange();
-        rangeMulti = unitBase.GetCurrentRangeMulti();
-        _orgRangeMulti = rangeMulti;
-        rangeMulti = 1f;
-        viewAngle = unitBase.GetCurrentViewAngle();
-        _orgViewAngle = viewAngle;
+        _range = unitBase.GetCurrentRange();
+        _rangeMulti = unitBase.GetCurrentRangeMulti();
+        _orgRangeMulti = _rangeMulti;
+        _rangeMulti = 1f;
+        _viewAngle = unitBase.GetCurrentViewAngle();
+        _orgViewAngle = _viewAngle;
         _skill1Distance = unitBase.GetCurrentSkill1Distance();
 
         _mover.Agent.speed = unitBase.GetCurrentMoveSpeed();
@@ -225,16 +235,16 @@ public class CHTargetTracker : MonoBehaviour
         if (active)
         {
             _expensionRange = true;
-            viewAngle = 360f;
-            rangeMulti = _orgRangeMulti;
+            _viewAngle = 360f;
+            _rangeMulti = _orgRangeMulti;
         }
         else
         {
-            await Task.Delay((int)(rangeMultiTime * 1000));
+            await Task.Delay((int)(_rangeMultiTime * 1000));
 
             _expensionRange = false;
-            viewAngle = _orgViewAngle;
-            rangeMulti = 1f;
+            _viewAngle = _orgViewAngle;
+            _rangeMulti = 1f;
         }
     }
 }
