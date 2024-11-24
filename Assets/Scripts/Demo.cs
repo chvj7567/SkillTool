@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.AI.Navigation.Editor;
 using UnityEngine;
 
 public class Demo : MonoBehaviour
@@ -11,10 +12,6 @@ public class Demo : MonoBehaviour
         //CHMResource.Instance.Instantiate(CHMUnit.Instance.GetOriginBall());
 
         CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.White, DefEnum.ELayer.Red, DefEnum.ELayer.Blue, Vector3.zero);
-
-        CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.White, DefEnum.ELayer.Blue, DefEnum.ELayer.Red, new Vector3(10, 0, 10));
-
-        CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.White, DefEnum.ELayer.Red, DefEnum.ELayer.Blue, new Vector3(20, 0, 10));
 
         CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.White, DefEnum.ELayer.Blue, DefEnum.ELayer.Red, new Vector3(20, 0, 20));
     }

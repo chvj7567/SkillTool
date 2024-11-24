@@ -111,19 +111,19 @@ public class CHTargetTracker : MonoBehaviour
 
         SetValue(unitData);
 
-        // 타겟 감지
+        //# 프레임 단위로 타겟 감지
         gameObject.UpdateAsObservable().Subscribe(_ =>
         {
-            // 비활성화 되어있으면 타겟 감지 X
+            //# 비활성화 되어있으면 타겟 감지 X
             if (gameObject.activeSelf == false)
                 return;
 
-            // 죽었으면 타겟 감지 X
+            //# 죽었으면 타겟 감지 X
             bool isDead = unitData == null ? false : unitData.IsDeath();
             if (isDead)
                 return;
 
-            // 시야 범위 안에 들어온 타겟 중 제일 가까운 타겟 감지
+            //# 시야 범위 안에 들어온 타겟 중 제일 가까운 타겟 감지
             switch (standardAxis)
             {
                 case DefEnum.EStandardAxis.X:
@@ -138,41 +138,41 @@ public class CHTargetTracker : MonoBehaviour
                     break;
             }
 
-            // 감지된 타겟이 없는 경우
+            //# 감지된 타겟이 없는 경우
             if (_closestTarget.objTarget == null)
             {
                 SetExpensionRange(false);
                 _mover.StopRunAnim();
             }
-            // 감지된 타겟이 있는 경우
+            //# 감지된 타겟이 있는 경우
             else
             {
                 SetExpensionRange(true);
 
-                // 스킬 사정거리 내에 있으면 멈추도록 설정
+                //# 스킬 사정거리 내에 있으면 멈추도록 설정
                 agent.stoppingDistance = _skill1Distance;
 
-                // 공격 가능한 상태이면(CC 등 안 걸려있는 상태인지)
+                //# 공격 가능한 상태이면(CC 등 안 걸려있는 상태인지)
                 if (unitData.IsNormalState())
                 {
-                    // 스킬 사정거리 밖에 있는 경우
+                    //# 스킬 사정거리 밖에 있는 경우
                     if (_closestTarget.distance > _skill1Distance)
                     {
-                        // 타겟을 향해 달리고 있는 중이면
-                        if (agent.isOnNavMesh && _mover.IsRunAnimPlaying())
+                        //# 네비메쉬 지형이라면
+                        if (agent.isOnNavMesh)
                         {
-                            // 타겟 위치를 갱신하여 쫒아감
+                            //# 타겟 위치를 갱신하여 쫒아감
                             agent.SetDestination(_closestTarget.objTarget.transform.position);
                         }
                         else
                         {
-                            // 타겟을 향해 바라보는 것만 갱신
+                            //# 타겟을 향해 바라보는 것만 갱신
                             _mover.LookAtPosition(_closestTarget.objTarget.transform.position);
                         }
 
                         _mover.PlayRunAnim();
                     }
-                    // 스킬 사정거리 안에 있는 경우
+                    //# 스킬 사정거리 안에 있는 경우
                     else
                     {
                         _mover.LookAtPosition(_closestTarget.objTarget.transform.position);

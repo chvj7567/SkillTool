@@ -142,7 +142,7 @@ public class CHContBase : MonoBehaviour
 
             foreach (AnimationClip clip in ac.animationClips)
             {
-                Debug.Log($"{clip.name}, {clip.length}");
+                //Debug.Log($"{clip.name}, {clip.length}");
                 _dicAnimTime.Add(clip.name, clip.length);
             }
         }
