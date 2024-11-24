@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be057a474a649a44e8fdc21bdf54ca50, type: 3}
+  m_Name: Devil
+  m_EditorClassIdentifier: 
+  eSkill: 8
+  skillDesc: "\uC9C8\uB9AC\uC5B8 Q"
+  isTargeting: 0
+  isChanneling: 1
+  distance: 10
+  coolTime: 3
+  eSkillCost: 0
+  cost: 0
+  liEffectData:
+  - eEffect: 1
+    effectAngle: 0
+    createCasterPosition: 0
+    startDelay: 0
+    createOnEmpty: 1
+    attach: 0
+    duplication: 0
+    onDecal: 0
+    eStatModifyType: 1
+    eDamageType1: 0
+    eDamageType2: 0
+    damage: 10
+    eTarget: 0
+    eTargetMask: 2
+    moveToPos: 0
+    moveSpeed: 0
+    offsetToTarget: 0
+    eCollision: 0
+    sphereRadius: 3
+    boxHalf: {x: 0, y: 0, z: 0}
+    collisionAngle: 360
+    triggerStartDelay: 0
+    triggerStayTime: 0.5
+    triggerEnter: 1
+    triggerExit: 0
+    stayTickTime: -1

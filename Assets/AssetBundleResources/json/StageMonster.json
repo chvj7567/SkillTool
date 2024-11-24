@@ -1,0 +1,14 @@
+[
+  {
+    "stage": 1,
+	"wave": 1,
+    "monsterUnit": 1,
+	"monsterCount": 1
+  },
+  {
+    "stage": 1,
+	"wave": 2,
+    "monsterUnit": 1,
+	"monsterCount": 2
+  }
+]

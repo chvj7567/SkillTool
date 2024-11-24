@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 955923b96de57fc41b870f46ab4d11aa, type: 3}
+  m_Name: OrangeLevel1
+  m_EditorClassIdentifier: 
+  eLevel: 2
+  levelDesc: 
+  maxHp: 0
+  hpRegenPerSecond: 0
+  maxMp: 0
+  mpRegenPerSecond: 0
+  attackPower: 0
+  defensePower: 0
+  moveSpeed: 0
+  rotateSpeed: 0
+  range: 0
+  rangeMulti: 0
+  viewAngle: 0
+  distance: 0
+  coolTime: 0
+  damage: 0

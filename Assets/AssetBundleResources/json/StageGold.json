@@ -1,0 +1,27 @@
+[
+  {
+    "stage": 1,
+    "playerGold": 100,
+    "unitGold": 10
+  },
+  {
+    "stage": 2,
+    "playerGold": 200,
+    "unitGold": 20
+  },
+  {
+    "stage": 3,
+    "playerGold": 300,
+    "unitGold": 30
+  },
+  {
+    "stage": 4,
+    "playerGold": 400,
+    "unitGold": 40
+  },
+  {
+    "stage": 5,
+    "playerGold": 500,
+    "unitGold": 50
+  }
+]
