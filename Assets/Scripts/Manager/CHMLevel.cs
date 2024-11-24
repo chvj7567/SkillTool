@@ -25,7 +25,10 @@ public class CHMLevel : CHSingleton<CHMLevel>
             List<LevelData> liLevelData = new List<LevelData>();
             var unit = (EUnit)i;
 
-            for (int j = 0; j < Enum.GetValues(typeof(ELevel)).Length; ++j)
+            if (unit == EUnit.None)
+                continue;
+
+            for (int j = 1; j < Enum.GetValues(typeof(ELevel)).Length + 1; ++j)
             {
                 var level = (ELevel)j;
 

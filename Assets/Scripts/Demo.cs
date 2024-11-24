@@ -11,9 +11,9 @@ public class Demo : MonoBehaviour
 
         //CHMResource.Instance.Instantiate(CHMUnit.Instance.GetOriginBall());
 
-        CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.White, DefEnum.ELayer.Red, DefEnum.ELayer.Blue, Vector3.zero);
+        CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.Blue, DefEnum.ELayer.Red, DefEnum.ELayer.Blue, Vector3.zero);
 
-        CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.White, DefEnum.ELayer.Blue, DefEnum.ELayer.Red, new Vector3(20, 0, 20));
+        CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.Red, DefEnum.ELayer.Blue, DefEnum.ELayer.Red, new Vector3(20, 0, 20));
     }
 
     public void Init()

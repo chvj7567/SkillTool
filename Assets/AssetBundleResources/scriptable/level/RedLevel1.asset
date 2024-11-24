@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 955923b96de57fc41b870f46ab4d11aa, type: 3}
   m_Name: RedLevel1
   m_EditorClassIdentifier: 
-  eLevel: 0
+  eLevel: 1
   levelDesc: 
   maxHp: 0
   hpRegenPerSecond: 0

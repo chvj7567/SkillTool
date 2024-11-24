@@ -140,13 +140,13 @@ public class CHSphereCollision : MonoBehaviour
                     sphereCollider.radius = effectData.sphereRadius;
                     sphereCollider.center = new Vector3(0f, -23f, 0f);
                 }
-                break;
-            case Defines.EParticle.SlashHit:
+                break;*/
+            case DefEnum.EParticle.SlashHit:
                 {
                     sphereCollider.radius = effectData.sphereRadius;
                     sphereCollider.center = new Vector3(0f, 3f, 0f);
                 }
-                break;*/
+                break;
             default:
                 {
                     sphereCollider.radius = effectData.sphereRadius;

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   eUnit: 5
   unitName: 
-  eLevel: 0
+  eLevel: 1
   maxHp: 100
   hpRegenPerSecond: 0
   maxMp: 100

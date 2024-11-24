@@ -281,6 +281,9 @@ public class CHMParticle : CHSingleton<CHMParticle>
                 break;
             case DefEnum.EParticle.FX_Arrow_impact:
                 {
+                    var posOrigin = particleObj.transform.position;
+                    particleObj.transform.position = new Vector3(posOrigin.x, posOrigin.y + .5f, posOrigin.z);
+
                     await MoveDirection(particleObj.transform.forward, 30f, _dicParticleTime[effectData.EParticle], particleObj);
                 }
                 break;
@@ -316,44 +319,33 @@ public class CHMParticle : CHSingleton<CHMParticle>
     }
 
     //# 각 파티클에 트리거 된 타겟들 처리 설정(데미지, 힐, CC기 등)
-    void SetParticleTriggerValue(DefEnum.ESkill eSkill, Transform caster, Transform target, Transform triggerTarget, Vector3 hitPostion, GameObject particleObj, SkillData.EffectData effectData)
+    void SetParticleTriggerValue(DefEnum.ESkill eSkill, Transform caster, Transform target, Transform triggerTarget, Vector3 hitPosition, GameObject particleObj, SkillData.EffectData effectData)
     {
         switch (effectData.EParticle)
         {
-            /*case Defines.EParticle.FX_Healing:
+            case DefEnum.EParticle.Fx_Healing:
                 {
-                    CHMSkill.Instance.ApplySkillValue(_eSkill, _trCaster, new List<Transform> { _trCaster }, _effectData);
+                    CHMSkill.Instance.ApplySkillValue(eSkill, caster, new List<Transform> { caster }, effectData);
                 }
                 break;
-            case Defines.EParticle.FX_Tornado:
+            case DefEnum.EParticle.FX_Tornado:
                 {
-                    TargetAirborne(_trTriggerTarget);
+                    TargetAirborne(triggerTarget);
 
-                    CHMSkill.Instance.ApplySkillValue(_eSkill, _trCaster, new List<Transform> { _trTriggerTarget }, _effectData);
+                    CHMSkill.Instance.ApplySkillValue(eSkill, caster, new List<Transform> { triggerTarget }, effectData);
                 }
                 break;
-            case Defines.EParticle.FX_Arrow_impact:
+            case DefEnum.EParticle.FX_Arrow_impact:
                 {
-                    _objParticle.SetActive(false);
+                    particleObj.SetActive(false);
 
-                    var hitParticle = GetParticleObject(Defines.EParticle.FX_IceArrow_Hit);
-                    hitParticle.transform.position = _hitPoint;
+                    var hitParticle = GetParticleObject(DefEnum.EParticle.FX_IceArrow_Hit);
+                    hitParticle.transform.position = hitPosition;
 
-                    _trTriggerTarget.DOShakePosition(0.1f);
-                    CHMSkill.Instance.ApplySkillValue(_eSkill, _trCaster, new List<Transform> { _trTriggerTarget }, _effectData);
+                    triggerTarget.DOShakePosition(0.1f);
+                    CHMSkill.Instance.ApplySkillValue(eSkill, caster, new List<Transform> { triggerTarget }, effectData);
                 }
                 break;
-            case Defines.EParticle.FX_Arrow_impact_sub:
-                {
-                    CHMSkill.Instance.ApplySkillValue(_eSkill, _trCaster, new List<Transform> { _trTriggerTarget }, _effectData);
-
-                    var cont = _trTriggerTarget.GetComponent<CHContBase>();
-                    if (cont != null)
-                    {
-                        cont.VarianceMoveSpeed(-7f, 1f);
-                    }
-                }
-                break;*/
             default:
                 {
                     CHMSkill.Instance.ApplySkillValue(eSkill, caster, new List<Transform> { triggerTarget }, effectData);

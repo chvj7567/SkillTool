@@ -65,17 +65,33 @@ public partial class DefEnum
     {
         None = 0,
         Arrow1,
+        Ax,
+        Devil,
+        Explosion,
+        Heal,
+        IceArrow,
+        IceArrow2,
+        Meteor,
+        Slash,
+        Tornado,
     }
 
     public enum EUnit
     {
         None = 0,
         White,
+        Brown,
+        Orange,
+        Yellow,
+        Blue,
+        Red,
+        Pink,
+        Green
     }
 
     public enum ELevel
     {
-        Level1,
+        Level1 = 1,
     }
 
     public enum EItem
@@ -161,8 +177,24 @@ public partial class DefEnum
         FX_Arrow_impact2,
         FX_Ax,
         FX_Tornado,
+        FX_Explosion,
         FX_Explosion_Hit,
-
+        FX_Arrow_impact_sub,
+        FX_Circle_hit,
+        FX_Circle_ring,
+        FX_Curse,
+        FX_Defense,
+        FX_Devil,
+        FX_Electricity,
+        FX_Electricity_Hit,
+        FX_Explosion_Magic,
+        FX_Explosion_Magic2,
+        FX_Fire,
+        FX_Gun_Impact,
+        Fx_Healing,
+        FX_IceArrow_Hit,
+        FX_Iceflake,
+        FX_Poison,
     }
 
     public enum EStat

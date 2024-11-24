@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be057a474a649a44e8fdc21bdf54ca50, type: 3}
   m_Name: Slash
   m_EditorClassIdentifier: 
-  eSkill: 3
+  eSkill: 9
   skillDesc: "\uCE7C\uC744 \uD718\uB450\uB974\uACE0 \uB3C5 \uB370\uBBF8\uC9C0"
   isTargeting: 1
   isChanneling: 0
@@ -21,7 +21,7 @@ MonoBehaviour:
   eSkillCost: 0
   cost: 0
   liEffectData:
-  - eEffect: 11
+  - EParticle: 1
     effectAngle: 0
     createCasterPosition: 1
     startDelay: 0
@@ -29,16 +29,16 @@ MonoBehaviour:
     attach: 0
     duplication: 0
     onDecal: 0
-    eStatModifyType: -1
-    eDamageType1: -1
-    eDamageType2: -1
+    eStatModifyType: 0
+    eDamageType1: 0
+    eDamageType2: 0
     damage: 0
-    eTarget: 0
-    eTargetMask: 2
+    eTarget: 3
+    eTargetMask: 3
     moveToPos: 0
     moveSpeed: 0
     offsetToTarget: 0
-    eCollision: 0
+    eCollision: 1
     sphereRadius: 10
     boxHalf: {x: 0, y: 0, z: 0}
     collisionAngle: 360
@@ -47,7 +47,7 @@ MonoBehaviour:
     triggerEnter: 0
     triggerExit: 0
     stayTickTime: -1
-  - eEffect: 12
+  - EParticle: 2
     effectAngle: 0
     createCasterPosition: 0
     startDelay: 0
@@ -55,16 +55,16 @@ MonoBehaviour:
     attach: 0
     duplication: 1
     onDecal: 0
-    eStatModifyType: 1
-    eDamageType1: 0
-    eDamageType2: 0
+    eStatModifyType: 2
+    eDamageType1: 1
+    eDamageType2: 1
     damage: 15
     eTarget: 1
-    eTargetMask: 2
+    eTargetMask: 3
     moveToPos: 0
     moveSpeed: 0
     offsetToTarget: 0
-    eCollision: 0
+    eCollision: 1
     sphereRadius: 1
     boxHalf: {x: 0, y: 0, z: 0}
     collisionAngle: 360

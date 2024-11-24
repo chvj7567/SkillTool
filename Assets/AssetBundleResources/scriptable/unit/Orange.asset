@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 398879e25a2280a4586ebcee5da6ca41, type: 3}
   m_Name: Orange
   m_EditorClassIdentifier: 
-  eUnit: 2
+  eUnit: 3
   unitName: 
-  eLevel: 0
+  eLevel: 1
   maxHp: 100
   hpRegenPerSecond: 0
   maxMp: 100
@@ -26,7 +26,7 @@ MonoBehaviour:
   range: 100
   rangeMulti: 2
   viewAngle: 360
-  eSkill1: 0
+  eSkill1: 8
   eSkill2: -1
   eSkill3: -1
   eSkill4: -1

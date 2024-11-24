@@ -12,16 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be057a474a649a44e8fdc21bdf54ca50, type: 3}
   m_Name: Ax
   m_EditorClassIdentifier: 
-  eSkill: 7
+  eSkill: 2
   skillDesc: "\uB4DC\uBE10 \uAD81"
   isTargeting: 0
   isChanneling: 1
-  distance: 10
+  distance: 20
   coolTime: 3
   eSkillCost: 0
   cost: 0
   liEffectData:
-  - eEffect: 22
+  - EParticle: 6
     effectAngle: 0
     createCasterPosition: 1
     startDelay: 0
@@ -29,16 +29,16 @@ MonoBehaviour:
     attach: 0
     duplication: 0
     onDecal: 0
-    eStatModifyType: 1
-    eDamageType1: 0
-    eDamageType2: 0
-    damage: 100
-    eTarget: 0
-    eTargetMask: 2
+    eStatModifyType: 2
+    eDamageType1: 1
+    eDamageType2: 1
+    damage: 5
+    eTarget: 3
+    eTargetMask: 3
     moveToPos: 0
     moveSpeed: 0
     offsetToTarget: 0
-    eCollision: 0
+    eCollision: 1
     sphereRadius: 3
     boxHalf: {x: 0, y: 0, z: 0}
     collisionAngle: 360

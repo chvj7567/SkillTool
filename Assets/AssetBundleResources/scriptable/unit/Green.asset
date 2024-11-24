@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 398879e25a2280a4586ebcee5da6ca41, type: 3}
   m_Name: Green
   m_EditorClassIdentifier: 
-  eUnit: 4
+  eUnit: 8
   unitName: 
-  eLevel: 0
+  eLevel: 1
   maxHp: 100
   hpRegenPerSecond: 0
   maxMp: 100

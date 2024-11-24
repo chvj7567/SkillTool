@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be057a474a649a44e8fdc21bdf54ca50, type: 3}
   m_Name: Heal
   m_EditorClassIdentifier: 
-  eSkill: 2
+  eSkill: 5
   skillDesc: "\uC790\uAE30 \uC790\uC2E0 \uD790"
   isTargeting: 0
   isChanneling: 1
@@ -21,24 +21,24 @@ MonoBehaviour:
   eSkillCost: 0
   cost: 0
   liEffectData:
-  - eEffect: 8
+  - EParticle: 22
     effectAngle: 0
     createCasterPosition: 1
-    startDelay: 1
-    createOnEmpty: 0
+    startDelay: 0
+    createOnEmpty: 1
     attach: 0
     duplication: 0
     onDecal: 0
-    eStatModifyType: 0
-    eDamageType1: 0
-    eDamageType2: 0
-    damage: 10
-    eTarget: 0
-    eTargetMask: 3
+    eStatModifyType: 1
+    eDamageType1: 1
+    eDamageType2: 1
+    damage: 5
+    eTarget: 1
+    eTargetMask: 2
     moveToPos: 0
     moveSpeed: 0
     offsetToTarget: 0
-    eCollision: 0
+    eCollision: 1
     sphereRadius: 0.1
     boxHalf: {x: 0, y: 0, z: 0}
     collisionAngle: 360
