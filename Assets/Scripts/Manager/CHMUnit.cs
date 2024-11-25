@@ -92,10 +92,13 @@ public class CHMUnit : CHSingleton<CHMUnit>
             return;
 
         int index = (int)eUnit;
-        MeshRenderer meshRenderer = unit.GetComponent<MeshRenderer>();
-        if (meshRenderer != null && index < _liMaterial.Count)
+        var arrMesh = unit.GetComponentsInChildren<SkinnedMeshRenderer>();
+        if (arrMesh != null && index < _liMaterial.Count)
         {
-            meshRenderer.material = _liMaterial[index];
+            foreach (var mesh in arrMesh)
+            {
+                mesh.material = _liMaterial[index];
+            }
         }
     }
 
@@ -161,7 +164,7 @@ public class CHMUnit : CHSingleton<CHMUnit>
 
     public void CreateUnit(Transform parent, DefEnum.EUnit eUnit, DefEnum.ELayer eTeamLayer, DefEnum.ELayer eTargetLayer, Vector3 position, List<CHTargetTracker> liTargetTracker = null, List<LayerMask> liTargetMask = null, bool onHpBar = true, bool onMpBar = false, bool onCoolTimeBar = false)
     {
-        CHMResource.Instance.InstantiateBall((ball) =>
+        CHMResource.Instance.InstantiateRobot(eUnit, (ball) =>
         {
             if (ball == null)
                 return;

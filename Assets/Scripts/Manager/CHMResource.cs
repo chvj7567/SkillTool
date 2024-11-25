@@ -122,7 +122,7 @@ public class CHMResource : CHSingleton<CHMResource>
 
     public void LoadUnitMaterial(DefEnum.EUnit material, Action<Material> callback)
     {
-        LoadAsset<Material>($"{DefEnum.EAssetPiece.Material.ToString()}", $"{material.ToString()}", callback);
+        LoadAsset<Material>($"{DefEnum.EAssetPiece.Material.ToString()}", $"PBR_{material.ToString()}", callback);
     }
 
     public void LoadLevelData(DefEnum.EUnit unit, DefEnum.ELevel level, Action<LevelData> callback)
@@ -140,9 +140,9 @@ public class CHMResource : CHSingleton<CHMResource>
         InstantiateAsObservable<GameObject>($"{DefEnum.EResource.Unit.ToString()}", $"Ball", callback);
     }
 
-    public void InstantiateUnit(DefEnum.EUnit unit, Action<GameObject> callback = null)
+    public void InstantiateRobot(DefEnum.EUnit unit, Action<GameObject> callback = null)
     {
-        InstantiateAsObservable<GameObject>($"{DefEnum.EResource.Unit.ToString()}", $"{unit.ToString()}", callback);
+        InstantiateAsObservable<GameObject>($"{DefEnum.EResource.Unit.ToString()}", $"Robot", callback);
     }
 
     public void InstantiateUI(DefEnum.EUI ui, Action<GameObject> callback = null)
