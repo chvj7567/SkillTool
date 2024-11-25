@@ -86,7 +86,7 @@ public partial class DefEnum
         Blue,
         Red,
         Pink,
-        Green
+        Green,
     }
 
     public enum ELevel

@@ -28,11 +28,13 @@ public class CHTargetTracker : MonoBehaviour
     [Header("시야 확장 여부")]
     [SerializeField, ReadOnly] bool _expensionRange = false;
 
-    [Header("움직임 관련")]
-    [SerializeField] CHMover _mover;
-
     [Header("근접 타겟")]
     [SerializeField, ReadOnly] DefClass.TargetInfo _closestTarget = new DefClass.TargetInfo();
+
+    [Header("움직임 관련")]
+    [SerializeField] CHMover _mover;
+    [SerializeField] CHUnitBase _unitBase;
+    [SerializeField] CHContBase _contBase;
 
     #region Setter
     public void SetTargetMask(int layer)
@@ -116,10 +118,7 @@ public class CHTargetTracker : MonoBehaviour
     {
         _mover.Init(_standardAxis);
 
-        NavMeshAgent agent = _mover.Agent;
-        CHUnitBase unitData = _mover.UnitData;
-
-        SetValue(unitData);
+        SetValue(_unitBase);
 
         //# 프레임 단위로 타겟 감지
         gameObject.UpdateAsObservable().Subscribe(_ =>
@@ -129,8 +128,7 @@ public class CHTargetTracker : MonoBehaviour
                 return;
 
             //# 죽었으면 타겟 감지 X
-            bool isDead = unitData == null ? false : unitData.IsDeath();
-            if (isDead)
+            if (_unitBase.IsDeath())
                 return;
 
             //# 시야 범위 안에 들어온 타겟 중 제일 가까운 타겟 감지
@@ -160,26 +158,22 @@ public class CHTargetTracker : MonoBehaviour
                 SetExpensionRange(true);
 
                 //# 스킬 사정거리 내에 있으면 멈추도록 설정
-                agent.stoppingDistance = _skill1Distance;
+                _mover.SetAgentStoppingDistance(_skill1Distance);
 
                 //# 공격 가능한 상태이면(CC 등 안 걸려있는 상태인지)
-                if (unitData.IsNormalState())
+                if (_unitBase.IsNormalState())
                 {
                     //# 스킬 사정거리 밖에 있는 경우
                     if (_closestTarget.distance > _skill1Distance)
                     {
                         //# 네비메쉬 지형이라면
-                        if (agent.isOnNavMesh)
+                        if (_mover.IsOnNavMesh)
                         {
                             //# 타겟 위치를 갱신하여 쫒아감
-                            agent.SetDestination(_closestTarget.objTarget.transform.position);
+                            _mover.SetDestination(_closestTarget.objTarget.transform.position);
                         }
-                        else
-                        {
-                            //# 타겟을 향해 바라보는 것만 갱신
-                            _mover.LookAtPosition(_closestTarget.objTarget.transform.position);
-                        }
-
+                         
+                        _mover.LookAtPosition(_closestTarget.objTarget.transform.position);
                         _mover.PlayRunAnim();
                     }
                     //# 스킬 사정거리 안에 있는 경우
@@ -195,16 +189,13 @@ public class CHTargetTracker : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        bool isDead = false;
-        if (_mover.UnitData)
-            isDead = _mover.UnitData.IsDeath();
-
+        bool isDead = _unitBase.IsDeath();
         if (_viewEditor && isDead == false)
         {
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(transform.position, _range * _rangeMulti);
 
-            //# 시야각의 경계선
+            //# 시야각의 경계선4
             Vector3 left = transform.Angle(-_viewAngle * 0.5f, _standardAxis);
             Vector3 right = transform.Angle(_viewAngle * 0.5f, _standardAxis);
 
@@ -226,8 +217,8 @@ public class CHTargetTracker : MonoBehaviour
         _orgViewAngle = _viewAngle;
         _skill1Distance = unitBase.GetCurrentSkill1Distance();
 
-        _mover.Agent.speed = unitBase.GetCurrentMoveSpeed();
-        _mover.Agent.angularSpeed = unitBase.GetCurrentRotateSpeed();
+        _mover.SetAgentSpeed(unitBase.GetCurrentMoveSpeed());
+        _mover.SetAgentAngularSpeed(unitBase.GetCurrentRotateSpeed());
     }
 
     public async void SetExpensionRange(bool active)

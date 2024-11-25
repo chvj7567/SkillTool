@@ -213,7 +213,9 @@ public class CHContBase : MonoBehaviour
                 if (mainTarget == null || mainTarget.objTarget == null)
                 {
                     if (_animator)
-                        _animator.SetBool(AttackRange, false);
+                    {
+                        _animator.SetBool(SightRange, false);
+                    }
                 }
                 //# 타겟이 범위 안에 있으면 즉시 공격 후 공격 딜레이 설정
                 else

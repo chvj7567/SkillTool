@@ -11,12 +11,9 @@ public class CHMover : MonoBehaviour
     [SerializeField, ReadOnly] CHUnitBase _unitBase;
     [SerializeField, ReadOnly] CHContBase _contBase;
 
-    public NavMeshAgent Agent { get { return _agent; } }
-    public Animator Animator { get { return _animator; } }
-    public CHUnitBase UnitData { get { return _unitBase; } }
-    public CHContBase ContData { get { return _contBase; } }
-
     DefEnum.EStandardAxis _standardAxis;
+
+    public bool IsOnNavMesh => _agent.isOnNavMesh;
 
     private void Awake()
     {
@@ -31,9 +28,9 @@ public class CHMover : MonoBehaviour
         _standardAxis = standardAxis;
     }
 
-    public void LookAtPosition(Vector3 _pos)
+    public void LookAtPosition(Vector3 destPos)
     {
-        var posTarget = _pos;
+        var posTarget = destPos;
         var posMy = transform.position;
 
         posTarget.y = 0f;
@@ -52,6 +49,26 @@ public class CHMover : MonoBehaviour
                 }
                 break;
         }
+    }
+
+    public void SetDestination(Vector3 destPos)
+    {
+        _agent.SetDestination(destPos);
+    }
+
+    public void SetAgentSpeed(float speed)
+    {
+        _agent.speed = speed;
+    }
+
+    public void SetAgentStoppingDistance(float distance)
+    {
+        _agent.stoppingDistance = distance;
+    }
+
+    public void SetAgentAngularSpeed(float angularSpeed)
+    {
+        _agent.angularSpeed = angularSpeed;
     }
 
     public bool IsRunAnimPlaying()
@@ -84,6 +101,8 @@ public class CHMover : MonoBehaviour
 
     public void StopRunAnim()
     {
+        _agent.velocity = Vector3.zero;
+
         if (_contBase && _animator)
         {
             _animator.SetBool(_contBase.SightRange, false);

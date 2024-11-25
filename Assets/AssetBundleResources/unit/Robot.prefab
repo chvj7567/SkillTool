@@ -2856,6 +2856,7 @@ MonoBehaviour:
   _liAnimName:
   - Idle_Guard_AR
   - Shoot_SingleShot_AR
+  - Run_guard_AR
 --- !u!114 &7728250604078137603
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2884,10 +2885,12 @@ MonoBehaviour:
   _orgViewAngle: -1
   _skill1Distance: -1
   _expensionRange: 0
-  _mover: {fileID: 1082467856781007714}
   _closestTarget:
     objTarget: {fileID: 0}
     distance: -1
+  _mover: {fileID: 1082467856781007714}
+  _unitBase: {fileID: -4243366789024471390}
+  _contBase: {fileID: 5267593630389785654}
 --- !u!136 &3834797451396584039
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -2934,7 +2937,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
