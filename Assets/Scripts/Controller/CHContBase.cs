@@ -75,11 +75,11 @@ public class CHContBase : MonoBehaviour
         }
     }
 
-    public int Death
+    public int Die
     {
         get
         {
-            return Animator.StringToHash("IsDeath");
+            return Animator.StringToHash("Die");
         }
     }
 
@@ -167,7 +167,7 @@ public class CHContBase : MonoBehaviour
             gameObject.UpdateAsObservable().Subscribe(async _ =>
             {
                 //# 죽거나 땅에 있는 상태가 아닐 때 (CC 상태인 경우)
-                if (_unitBase.IsDeath() || _unitBase.IsAirborne())
+                if (_unitBase.IsDie || _unitBase.IsAirborne)
                     return;
 
                 DefClass.TargetInfo mainTarget = _targetTracker.GetClosestTargetInfo();
@@ -210,7 +210,7 @@ public class CHContBase : MonoBehaviour
                     _timeSinceLastSkill4 = -1f;
                 }
 
-                if (mainTarget == null || mainTarget.objTarget == null)
+                if (mainTarget == null || mainTarget.target == null)
                 {
                     if (_animator)
                     {
@@ -220,7 +220,7 @@ public class CHContBase : MonoBehaviour
                 //# 타겟이 범위 안에 있으면 즉시 공격 후 공격 딜레이 설정
                 else
                 {
-                    Vector3 posMainTarget = mainTarget.objTarget.transform.position;
+                    Vector3 posMainTarget = mainTarget.target.transform.position;
                     Vector3 posMy = transform.position;
                     Vector3 dirMy = Vector3.zero;
 
@@ -242,7 +242,7 @@ public class CHContBase : MonoBehaviour
                     var dirMainTarget = posMainTarget - posMy;
 
                     //# 1번 스킬
-                    if ((_skill1Lock == false) && _useSkill1 && _unitBase.IsNormalState())
+                    if ((_skill1Lock == false) && _useSkill1 && _unitBase.IsNormalState)
                     {
                         if ((_skill1Channeling == false) && (_timeSinceLastSkill1 < 0f) && (mainTarget.distance <= _unitBase.GetCurrentSkill1Distance()))
                         {
@@ -269,7 +269,7 @@ public class CHContBase : MonoBehaviour
                                 trCaster = transform,
                                 posCaster = posMy,
                                 dirCaster = dirMy,
-                                trTarget = mainTarget.objTarget.transform,
+                                trTarget = mainTarget.target.transform,
                                 posTarget = posMainTarget,
                                 dirTarget = posMainTarget - posMy,
                                 posSkill = posMainTarget,
@@ -289,7 +289,7 @@ public class CHContBase : MonoBehaviour
                     }
 
                     //# 2번 스킬
-                    if ((_skill2Lock == false) && _useSkill2 && _unitBase.IsNormalState())
+                    if ((_skill2Lock == false) && _useSkill2 && _unitBase.IsNormalState)
                     {
                         if ((_skill2Channeling == false) && _timeSinceLastSkill2 < 0f && mainTarget.distance <= _unitBase.GetCurrentSkill2Distance())
                         {
@@ -314,7 +314,7 @@ public class CHContBase : MonoBehaviour
                                 trCaster = transform,
                                 posCaster = posMy,
                                 dirCaster = dirMy,
-                                trTarget = mainTarget.objTarget.transform,
+                                trTarget = mainTarget.target.transform,
                                 posTarget = posMainTarget,
                                 dirTarget = posMainTarget - posMy,
                                 posSkill = posMainTarget,
@@ -334,7 +334,7 @@ public class CHContBase : MonoBehaviour
                     }
 
                     //# 3번 스킬
-                    if ((_skill3Lock == false) && _useSkill3 && _unitBase.IsNormalState())
+                    if ((_skill3Lock == false) && _useSkill3 && _unitBase.IsNormalState)
                     {
                         if ((_skill3Channeling == false) && _timeSinceLastSkill3 < 0f && mainTarget.distance <= _unitBase.GetCurrentSkill3Distance())
                         {
@@ -359,7 +359,7 @@ public class CHContBase : MonoBehaviour
                                 trCaster = transform,
                                 posCaster = posMy,
                                 dirCaster = dirMy,
-                                trTarget = mainTarget.objTarget.transform,
+                                trTarget = mainTarget.target.transform,
                                 posTarget = posMainTarget,
                                 dirTarget = posMainTarget - posMy,
                                 posSkill = posMainTarget,
@@ -379,7 +379,7 @@ public class CHContBase : MonoBehaviour
                     }
 
                     //# 4번 스킬
-                    if ((_skill4Lock == false) && _useSkill4 && _unitBase.IsNormalState())
+                    if ((_skill4Lock == false) && _useSkill4 && _unitBase.IsNormalState)
                     {
                         if ((_skill4Channeling == false) && _timeSinceLastSkill4 < 0f && mainTarget.distance <= _unitBase.GetCurrentSkill4Distance())
                         {
@@ -404,7 +404,7 @@ public class CHContBase : MonoBehaviour
                                 trCaster = transform,
                                 posCaster = posMy,
                                 dirCaster = dirMy,
-                                trTarget = mainTarget.objTarget.transform,
+                                trTarget = mainTarget.target.transform,
                                 posTarget = posMainTarget,
                                 dirTarget = posMainTarget - posMy,
                                 posSkill = posMainTarget,

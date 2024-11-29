@@ -6,6 +6,8 @@ using UnityEngine;
 using System;
 using static DefClass;
 using static DefEnum;
+using UnityEngine.Rendering.Universal;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -13,14 +15,9 @@ using UnityEditor;
 
 public class CHMSkill : CHSingleton<CHMSkill>
 {
-    #region Private Argument
     Dictionary<DefEnum.ESkill, SkillData> _dicSkillData = new Dictionary<DefEnum.ESkill, SkillData>();
 
     CancellationTokenSource _cancleTokenSource;
-
-    GameObject _roundAreaDecal = null;
-    GameObject _roundTimingDecal = null;
-    #endregion
 
     #region Initialize
     public bool Initialize => _initialize;
@@ -47,12 +44,12 @@ public class CHMSkill : CHSingleton<CHMSkill>
         {
             var skill = (DefEnum.ESkill)i;
 
-            CHMResource.Instance.LoadSkillData(skill, (_) =>
+            CHMResource.Instance.LoadSkillData(skill, (skillData) =>
             {
-                if (_ == null)
+                if (skillData == null)
                     return;
 
-                _dicSkillData.Add(skill, _);
+                _dicSkillData.Add(skill, skillData);
             });
         }
     }
@@ -128,7 +125,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
                 var unitBase = target.GetComponent<CHUnitBase>();
 
                 //# 타겟이 살아있으면 타겟으로 지정
-                if (unitBase != null && unitBase.IsDeath() == false)
+                if (unitBase != null && unitBase.IsDie == false)
                 {
                     //# 제일 짧은 거리에 있는 타겟을 리스트의 첫번째로
                     if (minDistance > distance)
@@ -137,7 +134,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
 
                         targetInfoList.Insert(0, new TargetInfo
                         {
-                            objTarget = target.gameObject,
+                            target = target.gameObject,
                             distance = distance,
                         });
                     }
@@ -145,7 +142,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
                     {
                         targetInfoList.Add(new TargetInfo
                         {
-                            objTarget = target.gameObject,
+                            target = target.gameObject,
                             distance = distance,
                         });
                     }
@@ -165,7 +162,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
         List<Transform> targetTransformList = new List<Transform>();
         foreach (TargetInfo targetInfo in liTargetInfo)
         {
-            targetTransformList.Add(targetInfo.objTarget.transform);
+            targetTransformList.Add(targetInfo.target.transform);
         }
 
         return targetTransformList;
@@ -178,7 +175,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
             return new List<Transform>();
 
         List<Transform> targetTransformList = new List<Transform>();
-        targetTransformList.Add(targetInfo.objTarget.transform);
+        targetTransformList.Add(targetInfo.target.transform);
 
         return targetTransformList;
     }
@@ -281,7 +278,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
     public async void CreateSkill(SkillLocationInfo skillLocationInfo, DefEnum.ESkill eSkill)
     {
         //# 스킬 시전자가 죽었으면 스킬 발동 X
-        var isDeath = skillLocationInfo.trCaster.GetComponent<CHUnitBase>().IsDeath();
+        var isDeath = skillLocationInfo.trCaster.GetComponent<CHUnitBase>().IsDie;
         if (isDeath)
             return;
 
@@ -621,116 +618,98 @@ public class CHMSkill : CHSingleton<CHMSkill>
     //# 스킬 범위 DP
     async Task CreateDecal(SkillLocationInfo skillLocationInfo, SkillData.EffectData effectData, bool isTargeting)
     {
-        GameObject objDecal = null;
+        GameObject decalObject = null;
 
         switch (effectData.eCollision)
         {
             case DefEnum.ECollision.Sphere:
                 {
-                    /*if (roundAreaDecal == null)
+                    CHMResource.Instance.InstantiateDecal(DefEnum.EDecal.Round, (decal) =>
                     {
-                        CHMResource.Instance.InstantiateDecal(Defines.EDecal.RoundArea, (decal) =>
+                        decalObject = decal;
+                        decalObject.SetActive(false);
+                        decalObject.GetOrAddComponent<CHPoolable>();
+
+                        if (isTargeting)
                         {
-                            roundAreaDecal = decal;
-                            roundAreaDecal.SetActive(false);
-                            roundAreaDecal.GetOrAddComponent<CHPoolable>();
+                            decalObject.transform.SetParent(skillLocationInfo.trTarget.transform);
+                            decalObject.transform.localPosition = Vector3.zero;
+                        }
+                        else
+                        {
+                            decalObject.transform.position = skillLocationInfo.posSkill;
+                            decalObject.transform.forward = skillLocationInfo.dirSkill;
+                        }
 
-                            objDecal = CHMMain.Resource.Instantiate(roundAreaDecal);
-                        });
-                    }
-                    else
-                    {
-                        objDecal = CHMResource.Instance.Instantiate(roundAreaDecal);
-                    }
+                        decal.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
 
-                    if (_isTargeting)
-                    {
-                        objDecal.transform.SetParent(_skillLocationInfo.trTarget.transform);
-                        objDecal.transform.localPosition = Vector3.zero;
-                    }
-                    else
-                    {
-                        objDecal.transform.position = _skillLocationInfo.posSkill;
-                        objDecal.transform.forward = _skillLocationInfo.dirSkill;
-                    }
-
-                    objDecal.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-
-                    var decalProjector = objDecal.GetComponent<DecalProjector>();
-                    if (decalProjector != null)
-                    {
-                        decalProjector.size = Vector3.one * _effectData.sphereRadius * 2;
-                    }*/
+                        var decalProjector = decal.GetComponent<DecalProjector>();
+                        if (decalProjector != null)
+                        {
+                            decalProjector.size = Vector3.one * effectData.sphereRadius * 2;
+                        }
+                    });
                 }
                 break;
             case DefEnum.ECollision.Box:
                 break;
         }
 
-        await CreateTimeDecal(skillLocationInfo, objDecal, effectData, isTargeting);
+        await CreateTimeDecal(skillLocationInfo, decalObject, effectData, isTargeting);
     }
 
     async Task CreateTimeDecal(SkillLocationInfo skillLocationInfo, GameObject areaDecal, SkillData.EffectData effectData, bool isTargeting)
     {
-        GameObject objDecal = null;
+        GameObject decalObject = null;
 
         switch (effectData.eCollision)
         {
             case DefEnum.ECollision.Sphere:
                 {
-                    /*if (roundTimingDecal == null)
+                    CHMResource.Instance.InstantiateDecal(DefEnum.EDecal.Round, (decal) =>
                     {
-                        CHMResource.Instance.InstantiateDecal(Defines.EDecal.RoundTiming, (decal) =>
-                        {
-                            roundTimingDecal = decal;
-                            roundTimingDecal.SetActive(false);
-                            roundTimingDecal.GetOrAddComponent<CHPoolable>();
+                        decalObject = decal;
+                        decalObject.SetActive(false);
+                        decalObject.GetOrAddComponent<CHPoolable>();
+                    });
 
-                            objDecal = CHMMain.Resource.Instantiate(roundTimingDecal);
-                        });
+                    if (isTargeting)
+                    {
+                        decalObject.transform.SetParent(skillLocationInfo.trTarget.transform);
+                        decalObject.transform.localPosition = Vector3.zero;
                     }
                     else
                     {
-                        objDecal = CHMResource.Instance.Instantiate(roundTimingDecal);
+                        decalObject.transform.position = skillLocationInfo.posSkill;
+                        decalObject.transform.forward = skillLocationInfo.dirSkill;
                     }
 
-                    if (_isTargeting)
-                    {
-                        objDecal.transform.SetParent(_skillLocationInfo.trTarget.transform);
-                        objDecal.transform.localPosition = Vector3.zero;
-                    }
-                    else
-                    {
-                        objDecal.transform.position = _skillLocationInfo.posSkill;
-                        objDecal.transform.forward = _skillLocationInfo.dirSkill;
-                    }
+                    decalObject.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
 
-                    objDecal.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-
-                    var decalProjector = objDecal.GetComponent<DecalProjector>();
+                    var decalProjector = decalObject.GetComponent<DecalProjector>();
                     if (decalProjector != null)
                     {
                         float time = 0;
-                        while (!token.IsCancellationRequested && time <= _effectData.startDelay)
+                        while (_cancleTokenSource.IsCancellationRequested == false && time <= effectData.startDelay)
                         {
-                            var curValue = Mathf.Lerp(0, _effectData.sphereRadius * 2, time / _effectData.startDelay);
+                            var curValue = Mathf.Lerp(0, effectData.sphereRadius * 2, time / effectData.startDelay);
 
                             if (decalProjector == null) break;
 
                             decalProjector.size = Vector3.one * curValue;
                             time += Time.deltaTime;
 
-                            if (_effectData.moveToPos)
+                            if (effectData.moveToPos)
                             {
-                                _skillLocationInfo.trCaster.position += _skillLocationInfo.dirSkill.normalized * _effectData.moveSpeed * Time.deltaTime;
+                                skillLocationInfo.trCaster.position += skillLocationInfo.dirSkill.normalized * effectData.moveSpeed * Time.deltaTime;
                             }
 
                             await Task.Delay((int)(Time.deltaTime * 1000f));
                         }
 
-                        CHMResource.Instance.Destroy(objDecal);
-                        CHMResource.Instance.Destroy(_areaDecal);
-                    }*/
+                        CHMResource.Instance.Destroy(decalObject);
+                        CHMResource.Instance.Destroy(areaDecal);
+                    }
                 }
                 break;
             case DefEnum.ECollision.Box:

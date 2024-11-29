@@ -2795,10 +2795,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 760abd1f35539ae4886e4743429438c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _agent: {fileID: 0}
-  _animator: {fileID: 0}
-  _unitBase: {fileID: 0}
-  _contBase: {fileID: 0}
+  _agent: {fileID: 75704831234924894}
+  _animator: {fileID: 2836004473841745626}
+  _unitBase: {fileID: -4243366789024471390}
+  _contBase: {fileID: 5267593630389785654}
 --- !u!114 &-4243366789024471390
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2884,9 +2884,9 @@ MonoBehaviour:
   _orgRangeMulti: -1
   _orgViewAngle: -1
   _skill1Distance: -1
-  _expensionRange: 0
-  _closestTarget:
-    objTarget: {fileID: 0}
+  _isExpensionRange: 0
+  _trackerTarget:
+    target: {fileID: 0}
     distance: -1
   _mover: {fileID: 1082467856781007714}
   _unitBase: {fileID: -4243366789024471390}

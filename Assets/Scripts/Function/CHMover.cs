@@ -6,22 +6,14 @@ using UnityEngine.AI;
 public class CHMover : MonoBehaviour
 {
     [Header("관련 컴포넌트")]
-    [SerializeField, ReadOnly] NavMeshAgent _agent;
-    [SerializeField, ReadOnly] Animator _animator;
-    [SerializeField, ReadOnly] CHUnitBase _unitBase;
-    [SerializeField, ReadOnly] CHContBase _contBase;
+    [SerializeField] NavMeshAgent _agent;
+    [SerializeField] Animator _animator;
+    [SerializeField] CHUnitBase _unitBase;
+    [SerializeField] CHContBase _contBase;
 
     DefEnum.EStandardAxis _standardAxis;
 
     public bool IsOnNavMesh => _agent.isOnNavMesh;
-
-    private void Awake()
-    {
-        _agent = gameObject.GetComponent<NavMeshAgent>();
-        _animator = gameObject.GetComponent<Animator>();
-        _unitBase = gameObject.GetComponent<CHUnitBase>();
-        _contBase = gameObject.GetComponent<CHContBase>();
-    }
 
     public void Init(DefEnum.EStandardAxis standardAxis)
     {

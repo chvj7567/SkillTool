@@ -71,7 +71,7 @@ public partial class DefClass
     [Serializable]
     public class TargetInfo
     {
-        public GameObject objTarget = null;
+        public GameObject target = null;
         public float distance = -1f;
     }
 

@@ -26,10 +26,10 @@ public class CHTargetTracker : MonoBehaviour
     [SerializeField, ReadOnly] float _skill1Distance = -1f;
 
     [Header("시야 확장 여부")]
-    [SerializeField, ReadOnly] bool _expensionRange = false;
+    [SerializeField, ReadOnly] bool _isExpensionRange = false;
 
     [Header("근접 타겟")]
-    [SerializeField, ReadOnly] DefClass.TargetInfo _closestTarget = new DefClass.TargetInfo();
+    [SerializeField, ReadOnly] DefClass.TargetInfo _trackerTarget = new DefClass.TargetInfo();
 
     [Header("움직임 관련")]
     [SerializeField] CHMover _mover;
@@ -47,9 +47,11 @@ public class CHTargetTracker : MonoBehaviour
     public DefEnum.EStandardAxis StandardAxis => _standardAxis;
     public LayerMask TargetMask => _targetMask;
 
+    public bool IsExpensionRange => _isExpensionRange;
+
     public DefClass.TargetInfo GetClosestTargetInfo()
     {
-        return _closestTarget;
+        return _trackerTarget;
     }
 
     public List<DefClass.TargetInfo> GetTargetInfoListInRange(Vector3 originPos, Vector3 direction, LayerMask lmTarget, float range, float viewAngle = 360f)
@@ -76,11 +78,11 @@ public class CHTargetTracker : MonoBehaviour
                 {
                     var unitBase = target.GetComponent<CHUnitBase>();
                     // 타겟이 살아있으면 타겟으로 지정
-                    if (unitBase != null && unitBase.IsDeath() == false)
+                    if (unitBase != null && unitBase.IsDie == false)
                     {
                         targetInfoList.Add(new DefClass.TargetInfo
                         {
-                            objTarget = target.gameObject,
+                            target = target.gameObject,
                             distance = targetDis,
                         });
                     }
@@ -128,58 +130,61 @@ public class CHTargetTracker : MonoBehaviour
                 return;
 
             //# 죽었으면 타겟 감지 X
-            if (_unitBase.IsDeath())
+            if (_unitBase.IsDie)
                 return;
 
-            //# 시야 범위 안에 들어온 타겟 중 제일 가까운 타겟 감지
-            switch (_standardAxis)
+            //# 감지된 타겟, 추적 중인 타겟이 모두 없는 경우
+            if (_trackerTarget.target == null)
             {
-                case DefEnum.EStandardAxis.X:
-                    {
-                        _closestTarget = GetClosestTargetInfo(transform.position, transform.right, _targetMask, _range * _rangeMulti, _viewAngle);
-                    }
-                    break;
-                case DefEnum.EStandardAxis.Z:
-                    {
-                        _closestTarget = GetClosestTargetInfo(transform.position, transform.forward, _targetMask, _range * _rangeMulti, _viewAngle);
-                    }
-                    break;
-            }
+                //# 시야 범위 안에 들어온 타겟 중 제일 가까운 타겟 감지
+                switch (_standardAxis)
+                {
+                    case DefEnum.EStandardAxis.X:
+                        {
+                            _trackerTarget = GetClosestTargetInfo(transform.position, transform.right, _targetMask, _range * _rangeMulti, _viewAngle);
+                        }
+                        break;
+                    case DefEnum.EStandardAxis.Z:
+                        {
+                            _trackerTarget = GetClosestTargetInfo(transform.position, transform.forward, _targetMask, _range * _rangeMulti, _viewAngle);
+                        }
+                        break;
+                }
 
-            //# 감지된 타겟이 없는 경우
-            if (_closestTarget.objTarget == null)
-            {
                 SetExpensionRange(false);
                 _mover.StopRunAnim();
             }
-            //# 감지된 타겟이 있는 경우
+            //# 감지된 타겟이 있거나 추적 중인 타겟이 있는 경우
             else
             {
+                //# 현재 타겟과의 거리 갱신
+                _trackerTarget.distance = Vector3.Distance(transform.position, _trackerTarget.target.transform.position);
+
                 SetExpensionRange(true);
 
                 //# 스킬 사정거리 내에 있으면 멈추도록 설정
                 _mover.SetAgentStoppingDistance(_skill1Distance);
 
                 //# 공격 가능한 상태이면(CC 등 안 걸려있는 상태인지)
-                if (_unitBase.IsNormalState())
+                if (_unitBase.IsNormalState)
                 {
                     //# 스킬 사정거리 밖에 있는 경우
-                    if (_closestTarget.distance > _skill1Distance)
+                    if (_trackerTarget.distance > _skill1Distance)
                     {
                         //# 네비메쉬 지형이라면
                         if (_mover.IsOnNavMesh)
                         {
                             //# 타겟 위치를 갱신하여 쫒아감
-                            _mover.SetDestination(_closestTarget.objTarget.transform.position);
+                            _mover.SetDestination(_trackerTarget.target.transform.position);
                         }
                          
-                        _mover.LookAtPosition(_closestTarget.objTarget.transform.position);
+                        _mover.LookAtPosition(_trackerTarget.target.transform.position);
                         _mover.PlayRunAnim();
                     }
                     //# 스킬 사정거리 안에 있는 경우
                     else
                     {
-                        _mover.LookAtPosition(_closestTarget.objTarget.transform.position);
+                        _mover.LookAtPosition(_trackerTarget.target.transform.position);
                         _mover.StopRunAnim();
                     }
                 }
@@ -189,8 +194,7 @@ public class CHTargetTracker : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        bool isDead = _unitBase.IsDeath();
-        if (_viewEditor && isDead == false)
+        if (_viewEditor && _unitBase.IsDie == false)
         {
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(transform.position, _range * _rangeMulti);
@@ -225,7 +229,7 @@ public class CHTargetTracker : MonoBehaviour
     {
         if (active)
         {
-            _expensionRange = true;
+            _isExpensionRange = true;
             _viewAngle = 360f;
             _rangeMulti = _orgRangeMulti;
         }
@@ -233,7 +237,7 @@ public class CHTargetTracker : MonoBehaviour
         {
             await Task.Delay((int)(_rangeMultiTime * 1000));
 
-            _expensionRange = false;
+            _isExpensionRange = false;
             _viewAngle = _orgViewAngle;
             _rangeMulti = 1f;
         }

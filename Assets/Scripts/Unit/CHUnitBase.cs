@@ -22,9 +22,7 @@ public class CHUnitBase : MonoBehaviour
 
     CancellationTokenSource _cancleTokenSource;
 
-    DG.Tweening.Sequence _seqAirborn;
-
-    public Action actDie;
+    Sequence _seqAirborn;
 
     IDisposable _disposePerSecond;
     #endregion
@@ -95,7 +93,7 @@ public class CHUnitBase : MonoBehaviour
             .ThrottleFirst(TimeSpan.FromSeconds(1))
             .Subscribe(_ =>
             {
-                if (IsDeath())
+                if (IsDie)
                     return;
 
                 //# ÃÊ´ç Hp/Mp È¸º¹ Àû¿ë
@@ -569,27 +567,18 @@ public class CHUnitBase : MonoBehaviour
         _gaugeBarCT?.SetGaugeBar(maxValue, curValue, damage, backGaugeTime, gaugeTime, viewDamage);
     }
 
-    public bool IsNormalState()
-    {
-        return MyUnitState == 0;
-    }
+    public bool IsNormalState => MyUnitState == 0;
 
-    public bool IsDeath()
-    {
-        return (MyUnitState & DefEnum.EUnitState.IsDead) != 0;
-    }
+    public bool IsDie => (MyUnitState & DefEnum.EUnitState.IsDie) != 0;
 
-    public bool IsAirborne()
-    {
-        return (MyUnitState & DefEnum.EUnitState.IsAirborne) != 0;
-    }
+    public bool IsAirborne => (MyUnitState & DefEnum.EUnitState.IsAirborne) != 0;
 
     public void ChangeHp(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
     {
-        if (IsDeath() == false)
+        if (IsDie == false)
         {
             var targetTracker = GetComponent<CHTargetTracker>();
-            if (targetTracker != null && targetTracker.GetClosestTargetInfo() != null && targetTracker.GetClosestTargetInfo().objTarget != null)
+            if (targetTracker != null && targetTracker.GetClosestTargetInfo() != null && targetTracker.GetClosestTargetInfo().target != null)
             {
                 targetTracker.SetExpensionRange(true);
             }
@@ -614,7 +603,7 @@ public class CHUnitBase : MonoBehaviour
 
     public void ChangeMp(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
     {
-        if (IsDeath() == false)
+        if (IsDie == false)
         {
             switch (eDamageType1)
             {
@@ -633,7 +622,7 @@ public class CHUnitBase : MonoBehaviour
 
     public void ChangeAttackPower(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
     {
-        if (IsDeath() == false)
+        if (IsDie == false)
         {
             switch (eDamageType1)
             {
@@ -652,7 +641,7 @@ public class CHUnitBase : MonoBehaviour
 
     public void ChangeDefensePower(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
     {
-        if (IsDeath() == false)
+        if (IsDie == false)
         {
             switch (eDamageType1)
             {
@@ -728,7 +717,7 @@ public class CHUnitBase : MonoBehaviour
 
     void AtOnceChangeHp(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value)
     {
-        if (IsDeath())
+        if (IsDie)
             return;
 
         float hpOrigin = _curHp;
@@ -749,7 +738,7 @@ public class CHUnitBase : MonoBehaviour
             $"{MyUnitData.unitName}<{gameObject.name}> => Hp : {hpOrigin} -> {hpResult}");
         }
 
-        // Á×À½ Die
+        //# Á×À½ Die
         if (hpResult <= 0.00001f)
         {
             Debug.Log($"{name} is Died");
@@ -762,24 +751,20 @@ public class CHUnitBase : MonoBehaviour
                 var animator = contBase.GetAnimator();
                 if (animator != null)
                 {
-                    animator.SetBool(contBase.AttackRange, false);
+                    animator.SetTrigger(contBase.AttackRange);
                     animator.SetBool(contBase.SightRange, false);
-                    animator.SetTrigger(contBase.Death);
+                    animator.SetTrigger(contBase.Die);
                 }
             }
 
-            MyUnitState |= DefEnum.EUnitState.IsDead;
+            MyUnitState |= DefEnum.EUnitState.IsDie;
 
             UnitCollider.enabled = false;
 
             if (_gaugeBarHP)
                 _gaugeBarHP.gameObject.SetActive(false);
 
-            transform.DOMoveY(-10f, 1f);
-
-            actDie?.Invoke();
-
-            CHMResource.Instance.Destroy(gameObject, 1f);
+            //CHMResource.Instance.Destroy(gameObject, 1f);
         }
     }
 

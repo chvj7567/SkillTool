@@ -14,7 +14,8 @@ public partial class DefEnum
         UI,
         Item,
         Particle,
-        Major
+        Major,
+        Decal,
     }
 
     public enum EAssetPiece
@@ -210,7 +211,14 @@ public partial class DefEnum
     public enum EUnitState
     {
         Normal = 0,
-        IsDead = 1 << 0,
+        IsDie = 1 << 0,
         IsAirborne = 1 << 1
+    }
+
+    public enum EDecal
+    {
+        None = 0,
+        Round,
+        Box,
     }
 }

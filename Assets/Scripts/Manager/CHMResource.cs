@@ -159,4 +159,9 @@ public class CHMResource : CHSingleton<CHMResource>
     {
         InstantiateAsObservable<GameObject>($"{DefEnum.EResource.Major.ToString()}", $"{major.ToString()}", callback);
     }
+
+    public void InstantiateDecal(DefEnum.EDecal decal, Action<GameObject> callback = null)
+    {
+        InstantiateAsObservable<GameObject>($"{DefEnum.EResource.Decal.ToString()}", $"{decal.ToString()}", callback);
+    }
 }

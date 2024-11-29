@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4909467333241138591}
   - component: {fileID: 4909467333241138588}
-  - component: {fileID: 7030438510865033607}
+  - component: {fileID: 57628115647746089}
   m_Layer: 0
   m_Name: RoundTiming
   m_TagString: Untagged
@@ -25,13 +25,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4909467333241138589}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: -0.574, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!114 &4909467333241138588
 MonoBehaviour:
@@ -52,11 +52,12 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
+  m_DecalLayerMask: 1
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 0.5}
   m_Size: {x: 1, y: 1, z: 1}
   m_FadeFactor: 1
---- !u!114 &7030438510865033607
+--- !u!114 &57628115647746089
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -65,7 +66,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4909467333241138589}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0721a24973e7eb646bb75b1fa607cc90, type: 3}
+  m_Script: {fileID: 11500000, guid: 8b4e0ca8595a34945852642337450f37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   isUse: 1
