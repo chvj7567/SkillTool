@@ -77,7 +77,7 @@ public class CHMUnit : CHSingleton<CHMUnit>
         if (unit == null)
             return;
 
-        CHUnitBase unitBase = unit.GetComponent<CHUnitBase>();
+        CHUnitData unitBase = unit.GetComponent<CHUnitData>();
         if (unitBase != null)
         {
             unitBase.UnitType = eUnit;
@@ -184,7 +184,7 @@ public class CHMUnit : CHSingleton<CHMUnit>
             SetLayer(ball, eTeamLayer);
             SetTargetMask(ball, eTargetLayer);
 
-            var unitBase = ball.GetComponent<CHUnitBase>();
+            var unitBase = ball.GetComponent<CHUnitData>();
             if (unitBase != null)
             {
                 unitBase.ShowHp = onHpBar;

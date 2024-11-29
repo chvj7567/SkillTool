@@ -6,7 +6,7 @@ using UniRx;
 using UniRx.Triggers;
 using UnityEngine;
 
-public class CHUnitBase : MonoBehaviour
+public class CHUnitData : MonoBehaviour
 {
     #region Parameter
     [SerializeField, ReadOnly] float _maxHp;
@@ -573,7 +573,7 @@ public class CHUnitBase : MonoBehaviour
 
     public bool IsAirborne => (MyUnitState & DefEnum.EUnitState.IsAirborne) != 0;
 
-    public void ChangeHp(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
+    public void ChangeHp(DefEnum.ESkill eSkill, CHUnitData attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
     {
         if (IsDie == false)
         {
@@ -601,7 +601,7 @@ public class CHUnitBase : MonoBehaviour
         }
     }
 
-    public void ChangeMp(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
+    public void ChangeMp(DefEnum.ESkill eSkill, CHUnitData attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
     {
         if (IsDie == false)
         {
@@ -620,7 +620,7 @@ public class CHUnitBase : MonoBehaviour
         }
     }
 
-    public void ChangeAttackPower(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
+    public void ChangeAttackPower(DefEnum.ESkill eSkill, CHUnitData attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
     {
         if (IsDie == false)
         {
@@ -639,7 +639,7 @@ public class CHUnitBase : MonoBehaviour
         }
     }
 
-    public void ChangeDefensePower(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
+    public void ChangeDefensePower(DefEnum.ESkill eSkill, CHUnitData attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
     {
         if (IsDie == false)
         {
@@ -715,7 +715,7 @@ public class CHUnitBase : MonoBehaviour
         MyLevelData = changeLevelData;
     }
 
-    void AtOnceChangeHp(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value)
+    void AtOnceChangeHp(DefEnum.ESkill eSkill, CHUnitData attackUnit, float value)
     {
         if (IsDie)
             return;
@@ -768,7 +768,7 @@ public class CHUnitBase : MonoBehaviour
         }
     }
 
-    void AtOnceChangeMp(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value)
+    void AtOnceChangeMp(DefEnum.ESkill eSkill, CHUnitData attackUnit, float value)
     {
         float mpOrigin = _curMp;
         float mpResult = _curMp + value;
@@ -793,7 +793,7 @@ public class CHUnitBase : MonoBehaviour
         }
     }
 
-    void AtOnceChangeAttackPower(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value)
+    void AtOnceChangeAttackPower(DefEnum.ESkill eSkill, CHUnitData attackUnit, float value)
     {
         float attackPowerOrigin = MyUnitData.attackPower;
         float attackPowerResult = MyUnitData.attackPower + value;
@@ -804,7 +804,7 @@ public class CHUnitBase : MonoBehaviour
             $"{MyUnitData.unitName}<{gameObject.name}> => AttackPower : {attackPowerOrigin} -> {attackPowerResult}");
     }
 
-    void AtOnceChangeDefensePower(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float value)
+    void AtOnceChangeDefensePower(DefEnum.ESkill eSkill, CHUnitData attackUnit, float value)
     {
         float defensePowerOrigin = MyUnitData.defensePower;
         float defensePowerResult = MyUnitData.defensePower + value;
@@ -815,7 +815,7 @@ public class CHUnitBase : MonoBehaviour
             $"{MyUnitData.unitName}<{gameObject.name}> => DefensePower : {defensePowerOrigin} -> {defensePowerResult}");
     }
 
-    async void ContinuousChangeHp(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float time, int count, float value)
+    async void ContinuousChangeHp(DefEnum.ESkill eSkill, CHUnitData attackUnit, float time, int count, float value)
     {
         float tickTime = time / (count - 1);
 
@@ -834,7 +834,7 @@ public class CHUnitBase : MonoBehaviour
         }
     }
 
-    async void ContinuousChangeMp(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float time, int count, float value)
+    async void ContinuousChangeMp(DefEnum.ESkill eSkill, CHUnitData attackUnit, float time, int count, float value)
     {
         float tickTime = time / (count - 1);
 
@@ -853,7 +853,7 @@ public class CHUnitBase : MonoBehaviour
         }
     }
 
-    async void ContinuousChangeAttackPower(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float time, int count, float value)
+    async void ContinuousChangeAttackPower(DefEnum.ESkill eSkill, CHUnitData attackUnit, float time, int count, float value)
     {
         float tickTime = time / (count - 1);
 
@@ -872,7 +872,7 @@ public class CHUnitBase : MonoBehaviour
         }
     }
 
-    async void ContinuousChangeDefensePower(DefEnum.ESkill eSkill, CHUnitBase attackUnit, float time, int count, float value)
+    async void ContinuousChangeDefensePower(DefEnum.ESkill eSkill, CHUnitData attackUnit, float time, int count, float value)
     {
         float tickTime = time / (count - 1);
 

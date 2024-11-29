@@ -10,7 +10,7 @@ public class CHGaugeBar : MonoBehaviour
     [SerializeField] Image imgBackGaugeBar;
     [SerializeField] Image imgGaugeBar;
 
-    [SerializeField, ReadOnly] CHUnitBase unitBase;
+    [SerializeField, ReadOnly] CHUnitData unitBase;
     [SerializeField, ReadOnly] float originPosYText;
 
     private void Update()
@@ -18,7 +18,7 @@ public class CHGaugeBar : MonoBehaviour
         transform.rotation = Camera.main.transform.rotation;
     }
 
-    public void Init(CHUnitBase unitBase, float posY, float gaugeBarPosY)
+    public void Init(CHUnitData unitBase, float posY, float gaugeBarPosY)
     {
         this.unitBase = unitBase;
         canvas.worldCamera = Camera.main;

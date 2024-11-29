@@ -33,7 +33,7 @@ public class CHTargetTracker : MonoBehaviour
 
     [Header("움직임 관련")]
     [SerializeField] CHMover _mover;
-    [SerializeField] CHUnitBase _unitBase;
+    [SerializeField] CHUnitData _unitBase;
     [SerializeField] CHContBase _contBase;
 
     #region Setter
@@ -76,13 +76,13 @@ public class CHTargetTracker : MonoBehaviour
                 // 장애물이 있는지 확인
                 if (Physics.Raycast(originPos, dirTarget, targetDis, ~(lmTarget | _ignoreMask)) == false)
                 {
-                    var unitBase = target.GetComponent<CHUnitBase>();
+                    var unit = target.GetComponent<CHUnitData>();
                     // 타겟이 살아있으면 타겟으로 지정
-                    if (unitBase != null && unitBase.IsDie == false)
+                    if (unit != null && unit.IsDie == false)
                     {
                         targetInfoList.Add(new DefClass.TargetInfo
                         {
-                            target = target.gameObject,
+                            target = unit,
                             distance = targetDis,
                         });
                     }
@@ -157,37 +157,45 @@ public class CHTargetTracker : MonoBehaviour
             //# 감지된 타겟이 있거나 추적 중인 타겟이 있는 경우
             else
             {
-                //# 현재 타겟과의 거리 갱신
-                _trackerTarget.distance = Vector3.Distance(transform.position, _trackerTarget.target.transform.position);
-
-                SetExpensionRange(true);
-
-                //# 스킬 사정거리 내에 있으면 멈추도록 설정
-                _mover.SetAgentStoppingDistance(_skill1Distance);
-
-                //# 공격 가능한 상태이면(CC 등 안 걸려있는 상태인지)
-                if (_unitBase.IsNormalState)
+                if (_trackerTarget.target.IsDie)
                 {
-                    //# 스킬 사정거리 밖에 있는 경우
-                    if (_trackerTarget.distance > _skill1Distance)
+                    _trackerTarget.target = null;
+                }
+                else
+                {
+                    //# 현재 타겟과의 거리 갱신
+                    _trackerTarget.distance = Vector3.Distance(transform.position, _trackerTarget.target.transform.position);
+
+                    SetExpensionRange(true);
+
+                    //# 스킬 사정거리 내에 있으면 멈추도록 설정
+                    _mover.SetAgentStoppingDistance(_skill1Distance);
+
+                    //# 공격 가능한 상태이면(CC 등 안 걸려있는 상태인지)
+                    if (_unitBase.IsNormalState)
                     {
-                        //# 네비메쉬 지형이라면
-                        if (_mover.IsOnNavMesh)
+                        //# 스킬 사정거리 밖에 있는 경우
+                        if (_trackerTarget.distance > _skill1Distance)
                         {
-                            //# 타겟 위치를 갱신하여 쫒아감
-                            _mover.SetDestination(_trackerTarget.target.transform.position);
+                            //# 네비메쉬 지형이라면
+                            if (_mover.IsOnNavMesh)
+                            {
+                                //# 타겟 위치를 갱신하여 쫒아감
+                                _mover.SetDestination(_trackerTarget.target.transform.position);
+                            }
+
+                            _mover.LookAtPosition(_trackerTarget.target.transform.position);
+                            _mover.PlayRunAnim();
                         }
-                         
-                        _mover.LookAtPosition(_trackerTarget.target.transform.position);
-                        _mover.PlayRunAnim();
-                    }
-                    //# 스킬 사정거리 안에 있는 경우
-                    else
-                    {
-                        _mover.LookAtPosition(_trackerTarget.target.transform.position);
-                        _mover.StopRunAnim();
+                        //# 스킬 사정거리 안에 있는 경우
+                        else
+                        {
+                            _mover.LookAtPosition(_trackerTarget.target.transform.position);
+                            _mover.StopRunAnim();
+                        }
                     }
                 }
+                
             }
         }).AddTo(this);
     }
@@ -208,7 +216,7 @@ public class CHTargetTracker : MonoBehaviour
         }
     }
 
-    public void SetValue(CHUnitBase unitBase)
+    public void SetValue(CHUnitData unitBase)
     {
         if (unitBase == null)
             return;

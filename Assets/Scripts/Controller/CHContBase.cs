@@ -51,7 +51,7 @@ public class CHContBase : MonoBehaviour
     [SerializeField, ReadOnly] float _timeSinceLastSkill4 = -1f;
 
     [SerializeField, ReadOnly] Animator _animator;
-    [SerializeField, ReadOnly] CHUnitBase _unitBase;
+    [SerializeField, ReadOnly] CHUnitData _unitBase;
     [SerializeField, ReadOnly] CHTargetTracker _targetTracker;
     [SerializeField, ReadOnly] NavMeshAgent _agent;
 
@@ -148,7 +148,7 @@ public class CHContBase : MonoBehaviour
         }
 
         _agent = gameObject.GetOrAddComponent<NavMeshAgent>();
-        _unitBase = gameObject.GetOrAddComponent<CHUnitBase>();
+        _unitBase = gameObject.GetOrAddComponent<CHUnitData>();
         _targetTracker = gameObject.GetOrAddComponent<CHTargetTracker>();
         if (_unitBase != null && _targetTracker != null)
         {

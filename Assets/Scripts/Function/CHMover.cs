@@ -8,7 +8,7 @@ public class CHMover : MonoBehaviour
     [Header("관련 컴포넌트")]
     [SerializeField] NavMeshAgent _agent;
     [SerializeField] Animator _animator;
-    [SerializeField] CHUnitBase _unitBase;
+    [SerializeField] CHUnitData _unitBase;
     [SerializeField] CHContBase _contBase;
 
     DefEnum.EStandardAxis _standardAxis;
