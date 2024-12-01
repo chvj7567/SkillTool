@@ -122,7 +122,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
             {
                 float distance = Vector3.Distance(originPos, targetTr.position);
 
-                var unit = target.GetComponent<CHUnitData>();
+                var unit = target.GetComponent<CHUnit>();
 
                 //# 타겟이 살아있으면 타겟으로 지정
                 if (unit != null && unit.IsDie == false)
@@ -181,7 +181,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
     }
 
     //# 해당 스킬을 쓸 수 있는지 확인
-    bool CheckUseSkill(DefEnum.ESkill eSkill, CHUnitData casterUnit, SkillData skillInfo)
+    bool CheckUseSkill(DefEnum.ESkill eSkill, CHUnit casterUnit, SkillData skillInfo)
     {
         switch (skillInfo.eSkillCost)
         {
@@ -278,7 +278,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
     public async void CreateSkill(SkillLocationInfo skillLocationInfo, DefEnum.ESkill eSkill)
     {
         //# 스킬 시전자가 죽었으면 스킬 발동 X
-        var isDeath = skillLocationInfo.trCaster.GetComponent<CHUnitData>().IsDie;
+        var isDeath = skillLocationInfo.trCaster.GetComponent<CHUnit>().IsDie;
         if (isDeath)
             return;
 
@@ -287,7 +287,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
         if (skillData == null)
             return;
 
-        var casterUnit = skillLocationInfo.trCaster.GetComponent<CHUnitData>();
+        var casterUnit = skillLocationInfo.trCaster.GetComponent<CHUnit>();
         if (casterUnit != null)
         {
             // 스킬을 사용할 비용이 있는지 확인
@@ -341,13 +341,13 @@ public class CHMSkill : CHSingleton<CHMSkill>
     //# 스킬 효과 적용(데미지, 힐 등)
     public void ApplySkillValue(DefEnum.ESkill eSkill, Transform caster, List<Transform> liTarget, SkillData.EffectData effectData)
     {
-        var casterUnit = caster.GetComponent<CHUnitData>();
+        var casterUnit = caster.GetComponent<CHUnit>();
         foreach (var target in liTarget)
         {
             if (target == null)
                 continue;
 
-            var targetUnit = target.GetComponent<CHUnitData>();
+            var targetUnit = target.GetComponent<CHUnit>();
             if (targetUnit != null)
             {
                 ApplyEffectType(eSkill, casterUnit, targetUnit, effectData);
@@ -519,7 +519,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
     }
 
     //# 스킬 효과 적용
-    void ApplyEffectType(DefEnum.ESkill eSkill, CHUnitData casterUnit, CHUnitData targetUnit, SkillData.EffectData effectData)
+    void ApplyEffectType(DefEnum.ESkill eSkill, CHUnit casterUnit, CHUnit targetUnit, SkillData.EffectData effectData)
     {
         if (casterUnit == null || targetUnit == null || effectData == null)
             return;
@@ -578,7 +578,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
     }
 
     //# 스킬 데미지 계산
-    float CalculateSkillDamage(CHUnitData casterUnit, CHUnitData targetUnit, SkillData.EffectData effectData)
+    float CalculateSkillDamage(CHUnit casterUnit, CHUnit targetUnit, SkillData.EffectData effectData)
     {
         if (casterUnit == null || targetUnit == null || effectData == null)
             return 0f;

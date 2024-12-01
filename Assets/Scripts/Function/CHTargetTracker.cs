@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine;
-using UnityEngine.AI;
 
 public class CHTargetTracker : MonoBehaviour
 {
@@ -31,10 +30,8 @@ public class CHTargetTracker : MonoBehaviour
     [Header("근접 타겟")]
     [SerializeField, ReadOnly] DefClass.TargetInfo _trackerTarget = new DefClass.TargetInfo();
 
-    [Header("움직임 관련")]
-    [SerializeField] CHMover _mover;
-    [SerializeField] CHUnitData _unitBase;
-    [SerializeField] CHContBase _contBase;
+    [Header("유닛")]
+    [SerializeField] CHUnit _unit;
 
     #region Setter
     public void SetTargetMask(int layer)
@@ -76,7 +73,7 @@ public class CHTargetTracker : MonoBehaviour
                 // 장애물이 있는지 확인
                 if (Physics.Raycast(originPos, dirTarget, targetDis, ~(lmTarget | _ignoreMask)) == false)
                 {
-                    var unit = target.GetComponent<CHUnitData>();
+                    var unit = target.GetComponent<CHUnit>();
                     // 타겟이 살아있으면 타겟으로 지정
                     if (unit != null && unit.IsDie == false)
                     {
@@ -118,9 +115,9 @@ public class CHTargetTracker : MonoBehaviour
 
     private void Start()
     {
-        _mover.Init(_standardAxis);
+        _unit.StandardAxis = _standardAxis;
 
-        SetValue(_unitBase);
+        SetValue(_unit);
 
         //# 프레임 단위로 타겟 감지
         gameObject.UpdateAsObservable().Subscribe(_ =>
@@ -130,7 +127,7 @@ public class CHTargetTracker : MonoBehaviour
                 return;
 
             //# 죽었으면 타겟 감지 X
-            if (_unitBase.IsDie)
+            if (_unit.IsDie)
                 return;
 
             //# 감지된 타겟, 추적 중인 타겟이 모두 없는 경우
@@ -152,7 +149,7 @@ public class CHTargetTracker : MonoBehaviour
                 }
 
                 SetExpensionRange(false);
-                _mover.StopRunAnim();
+                _unit.StopRunAnim();
             }
             //# 감지된 타겟이 있거나 추적 중인 타겟이 있는 경우
             else
@@ -169,29 +166,29 @@ public class CHTargetTracker : MonoBehaviour
                     SetExpensionRange(true);
 
                     //# 스킬 사정거리 내에 있으면 멈추도록 설정
-                    _mover.SetAgentStoppingDistance(_skill1Distance);
+                    _unit.SetAgentStoppingDistance(_skill1Distance);
 
                     //# 공격 가능한 상태이면(CC 등 안 걸려있는 상태인지)
-                    if (_unitBase.IsNormalState)
+                    if (_unit.IsNormalState)
                     {
                         //# 스킬 사정거리 밖에 있는 경우
                         if (_trackerTarget.distance > _skill1Distance)
                         {
                             //# 네비메쉬 지형이라면
-                            if (_mover.IsOnNavMesh)
+                            if (_unit.IsOnNavMesh)
                             {
                                 //# 타겟 위치를 갱신하여 쫒아감
-                                _mover.SetDestination(_trackerTarget.target.transform.position);
+                                _unit.SetDestination(_trackerTarget.target.transform.position);
                             }
 
-                            _mover.LookAtPosition(_trackerTarget.target.transform.position);
-                            _mover.PlayRunAnim();
+                            _unit.LookAtPosition(_trackerTarget.target.transform.position);
+                            _unit.PlayRunAnim();
                         }
                         //# 스킬 사정거리 안에 있는 경우
                         else
                         {
-                            _mover.LookAtPosition(_trackerTarget.target.transform.position);
-                            _mover.StopRunAnim();
+                            _unit.LookAtPosition(_trackerTarget.target.transform.position);
+                            _unit.StopRunAnim();
                         }
                     }
                 }
@@ -202,7 +199,7 @@ public class CHTargetTracker : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        if (_viewEditor && _unitBase.IsDie == false)
+        if (_viewEditor && _unit.IsDie == false)
         {
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(transform.position, _range * _rangeMulti);
@@ -216,21 +213,21 @@ public class CHTargetTracker : MonoBehaviour
         }
     }
 
-    public void SetValue(CHUnitData unitBase)
+    public void SetValue(CHUnit unit)
     {
-        if (unitBase == null)
+        if (unit == null)
             return;
 
-        _range = unitBase.GetCurrentRange();
-        _rangeMulti = unitBase.GetCurrentRangeMulti();
+        _range = unit.GetCurrentRange();
+        _rangeMulti = unit.GetCurrentRangeMulti();
         _orgRangeMulti = _rangeMulti;
         _rangeMulti = 1f;
-        _viewAngle = unitBase.GetCurrentViewAngle();
+        _viewAngle = unit.GetCurrentViewAngle();
         _orgViewAngle = _viewAngle;
-        _skill1Distance = unitBase.GetCurrentSkill1Distance();
+        _skill1Distance = unit.GetCurrentSkill1Distance();
 
-        _mover.SetAgentSpeed(unitBase.GetCurrentMoveSpeed());
-        _mover.SetAgentAngularSpeed(unitBase.GetCurrentRotateSpeed());
+        _unit.SetAgentSpeed(unit.GetCurrentMoveSpeed());
+        _unit.SetAgentAngularSpeed(unit.GetCurrentRotateSpeed());
     }
 
     public async void SetExpensionRange(bool active)

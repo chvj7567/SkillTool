@@ -454,7 +454,7 @@ public class CHMParticle : CHSingleton<CHMParticle>
     //# Å¸°Ù ¿¡¾îº» ½ÃÅ´
     void TargetAirborne(Transform target)
     {
-        var unitBase = target.GetComponent<CHUnitData>();
+        var unitBase = target.GetComponent<CHUnit>();
         if (unitBase == null)
             return;
 

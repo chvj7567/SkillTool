@@ -9,7 +9,6 @@ public class CHMUnit : CHSingleton<CHMUnit>
     Dictionary<EUnit, UnitData> _dicUnitData = new Dictionary<EUnit, UnitData>();
     List<Material> _liMaterial = new List<Material>();
     List<GameObject> _liUnit = new List<GameObject>();
-    GameObject _originBall = null;
     GameObject _originGaugeBar = null;
     GameObject _originDamageText = null;
 
@@ -46,11 +45,6 @@ public class CHMUnit : CHSingleton<CHMUnit>
             });
         }
 
-        CHMResource.Instance.LoadOriginBall((ball) =>
-        {
-            _originBall = ball;
-        });
-
         CHMResource.Instance.LoadOriginGaugeBar((gaugeBar) =>
         {
             _originGaugeBar = gaugeBar;
@@ -77,7 +71,7 @@ public class CHMUnit : CHSingleton<CHMUnit>
         if (unit == null)
             return;
 
-        CHUnitData unitBase = unit.GetComponent<CHUnitData>();
+        CHUnit unitBase = unit.GetComponent<CHUnit>();
         if (unitBase != null)
         {
             unitBase.UnitType = eUnit;
@@ -123,14 +117,6 @@ public class CHMUnit : CHSingleton<CHMUnit>
     #endregion
 
     #region Getter
-    public GameObject GetOriginBall()
-    {
-        if (_originBall == null)
-            throw new NullReferenceException();
-
-        return _originBall;
-    }
-
     public GameObject GetOriginGaugeBar()
     {
         if (_originGaugeBar == null)
@@ -184,7 +170,7 @@ public class CHMUnit : CHSingleton<CHMUnit>
             SetLayer(ball, eTeamLayer);
             SetTargetMask(ball, eTargetLayer);
 
-            var unitBase = ball.GetComponent<CHUnitData>();
+            var unitBase = ball.GetComponent<CHUnit>();
             if (unitBase != null)
             {
                 unitBase.ShowHp = onHpBar;

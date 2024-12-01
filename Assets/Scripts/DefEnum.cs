@@ -62,6 +62,14 @@ public partial class DefEnum
         Z
     }
 
+    public enum EAnim
+    {
+        Idle,
+        Attack,
+        Run,
+        Death
+    }
+
     public enum ESkill
     {
         None = 0,

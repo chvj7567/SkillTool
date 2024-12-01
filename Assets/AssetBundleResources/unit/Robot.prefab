@@ -2704,9 +2704,7 @@ GameObject:
   - component: {fileID: 2836004475591197023}
   - component: {fileID: 2836004473841745626}
   - component: {fileID: 75704831234924894}
-  - component: {fileID: 1082467856781007714}
   - component: {fileID: -4243366789024471390}
-  - component: {fileID: 5267593630389785654}
   - component: {fileID: 7728250604078137603}
   - component: {fileID: 3834797451396584039}
   - component: {fileID: 6750550168411243048}
@@ -2783,22 +2781,6 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &1082467856781007714
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2836004475591695743}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 760abd1f35539ae4886e4743429438c2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _agent: {fileID: 75704831234924894}
-  _animator: {fileID: 2836004473841745626}
-  _unitBase: {fileID: -4243366789024471390}
-  _contBase: {fileID: 5267593630389785654}
 --- !u!114 &-4243366789024471390
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2808,27 +2790,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 2836004475591695743}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: de6d84c3221a0264bb6a084ddee52616, type: 3}
+  m_Script: {fileID: 11500000, guid: dcbf299daf98c264fb13b81edc36b347, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _agent: {fileID: 75704831234924894}
+  _animator: {fileID: 2836004473841745626}
+  _unitCollider: {fileID: 3834797451396584039}
+  _targetTracker: {fileID: 7728250604078137603}
+  _liAnimName:
+  - Idle_Guard_AR
+  - Shoot_SingleShot_AR
+  - Run_guard_AR
+  - Die
   _maxHp: 0
   _maxMp: 0
   _curHp: 0
   _curMp: 0
   _bonusHp: 0
   _bonusMp: 0
---- !u!114 &5267593630389785654
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2836004475591695743}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fca749c7b7fceb5478b69e0c1e10f8cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
   _useSkill1: 1
   _useSkill2: 0
   _useSkill3: 0
@@ -2849,14 +2828,6 @@ MonoBehaviour:
   _timeSinceLastSkill2: -1
   _timeSinceLastSkill3: -1
   _timeSinceLastSkill4: -1
-  _animator: {fileID: 0}
-  _unitBase: {fileID: 0}
-  _targetTracker: {fileID: 0}
-  _agent: {fileID: 0}
-  _liAnimName:
-  - Idle_Guard_AR
-  - Shoot_SingleShot_AR
-  - Run_guard_AR
 --- !u!114 &7728250604078137603
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2888,9 +2859,7 @@ MonoBehaviour:
   _trackerTarget:
     target: {fileID: 0}
     distance: -1
-  _mover: {fileID: 1082467856781007714}
-  _unitBase: {fileID: -4243366789024471390}
-  _contBase: {fileID: 5267593630389785654}
+  _unit: {fileID: -4243366789024471390}
 --- !u!136 &3834797451396584039
 CapsuleCollider:
   m_ObjectHideFlags: 0
