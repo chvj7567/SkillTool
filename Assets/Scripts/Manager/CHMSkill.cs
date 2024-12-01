@@ -583,19 +583,7 @@ public class CHMSkill : CHSingleton<CHMSkill>
         if (casterUnit == null || targetUnit == null || effectData == null)
             return 0f;
 
-        float damage = effectData.damage;
-
-        var levelData = casterUnit.MyLevelData;
-        if (levelData != null)
-        {
-            damage += levelData.damage;
-        }
-
-        var itemData = casterUnit.GetOriginItem1Data();
-        if (itemData != null)
-        {
-            damage += itemData.damage;
-        }
+        float damage = effectData.damage + casterUnit.GetPlusDamage();
         
         //# 데미지 타입에 따라 구분(고정 데미지, 퍼센트 데미지 등)
         switch (effectData.eDamageType2)

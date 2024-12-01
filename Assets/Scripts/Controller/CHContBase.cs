@@ -152,10 +152,14 @@ public class CHContBase : MonoBehaviour
         _targetTracker = gameObject.GetOrAddComponent<CHTargetTracker>();
         if (_unitBase != null && _targetTracker != null)
         {
-            if (_unitBase.GetOriginSkill1Data() == null) _skill1Lock = true;
-            if (_unitBase.GetOriginSkill2Data() == null) _skill2Lock = true;
-            if (_unitBase.GetOriginSkill3Data() == null) _skill3Lock = true;
-            if (_unitBase.GetOriginSkill4Data() == null) _skill4Lock = true;
+            if (_unitBase.CheckSkill1 == false)
+                _skill1Lock = true;
+            if (_unitBase.CheckSkill2 == false)
+                _skill2Lock = true;
+            if (_unitBase.CheckSkill3 == false)
+                _skill3Lock = true;
+            if (_unitBase.CheckSkill4 == false)
+                _skill4Lock = true;
 
             _targetTracker.SetValue(_unitBase);
 
@@ -250,7 +254,7 @@ public class CHContBase : MonoBehaviour
                             {
                                 _animator.SetTrigger(AttackRange);
                                 
-                                if (_unitBase.GetOriginSkill1Data().isChanneling)
+                                if (_unitBase.IsSkill1Channeling)
                                 {
                                     //# 애니메이션 시전 시간동안 채널링
                                     _skill1Channeling = true;
@@ -274,7 +278,7 @@ public class CHContBase : MonoBehaviour
                                 dirTarget = posMainTarget - posMy,
                                 posSkill = posMainTarget,
                                 dirSkill = posMainTarget - posMy,
-                            }, _unitBase.GetOriginSkill1Data().eSkill);
+                            }, _unitBase.Skill1Type);
 
                             if (_skill1NoCoolClick == true)
                             {
@@ -297,7 +301,7 @@ public class CHContBase : MonoBehaviour
                             {
                                 _animator.SetTrigger(AttackRange);
 
-                                if (_unitBase.GetOriginSkill2Data().isChanneling)
+                                if (_unitBase.IsSkill2Channeling)
                                 {
                                     //# 애니메이션 시전 시간동안 채널링
                                     _skill2Channeling = true;
@@ -319,7 +323,7 @@ public class CHContBase : MonoBehaviour
                                 dirTarget = posMainTarget - posMy,
                                 posSkill = posMainTarget,
                                 dirSkill = posMainTarget - posMy,
-                            }, _unitBase.GetOriginSkill2Data().eSkill);
+                            }, _unitBase.Skill2Type);
 
                             if (_skill2NoCoolClick == true)
                             {
@@ -342,7 +346,7 @@ public class CHContBase : MonoBehaviour
                             {
                                 _animator.SetTrigger(AttackRange);
 
-                                if (_unitBase.GetOriginSkill3Data().isChanneling)
+                                if (_unitBase.IsSkill3Channeling)
                                 {
                                     //# 애니메이션 시전 시간동안 채널링
                                     _skill3Channeling = true;
@@ -364,7 +368,7 @@ public class CHContBase : MonoBehaviour
                                 dirTarget = posMainTarget - posMy,
                                 posSkill = posMainTarget,
                                 dirSkill = posMainTarget - posMy,
-                            }, _unitBase.GetOriginSkill3Data().eSkill);
+                            }, _unitBase.Skill3Type);
 
                             if (_skill3NoCoolClick == true)
                             {
@@ -387,7 +391,7 @@ public class CHContBase : MonoBehaviour
                             {
                                 _animator.SetTrigger(AttackRange);
 
-                                if (_unitBase.GetOriginSkill4Data().isChanneling)
+                                if (_unitBase.IsSkill4Channeling)
                                 {
                                     //# 애니메이션 시전 시간동안 채널링
                                     _skill4Channeling = true;
@@ -409,7 +413,7 @@ public class CHContBase : MonoBehaviour
                                 dirTarget = posMainTarget - posMy,
                                 posSkill = posMainTarget,
                                 dirSkill = posMainTarget - posMy,
-                            }, _unitBase.GetOriginSkill4Data().eSkill);
+                            }, _unitBase.Skill4Type);
 
                             if (_skill4NoCoolClick == true)
                             {

@@ -9,6 +9,8 @@ using UnityEngine;
 public class CHUnitData : MonoBehaviour
 {
     #region Parameter
+    [SerializeField] Collider _unitCollider;
+    [SerializeField] MeshRenderer _unitMesh;
     [SerializeField, ReadOnly] float _maxHp;
     [SerializeField, ReadOnly] float _maxMp;
     [SerializeField, ReadOnly] float _curHp;
@@ -20,6 +22,14 @@ public class CHUnitData : MonoBehaviour
     CHGaugeBar _gaugeBarMP;
     CHGaugeBar _gaugeBarCT;
 
+    UnitData _unitData;
+    LevelData _levelData;
+    SkillData _skill1Data;
+    SkillData _skill2Data;
+    SkillData _skill3Data;
+    SkillData _skill4Data;
+    ItemData _item1Data;
+
     CancellationTokenSource _cancleTokenSource;
 
     Sequence _seqAirborn;
@@ -28,20 +38,11 @@ public class CHUnitData : MonoBehaviour
     #endregion
 
     #region Property
-    [SerializeField] public DefEnum.EUnit UnitType { get; set; }
-    [SerializeField] public Collider UnitCollider { get; set; }
-    [SerializeField] public MeshRenderer UnitMesh { get; set; }
-    [SerializeField] public bool ShowHp { get; set; }
-    [SerializeField] public bool ShowMp { get; set; }
-    [SerializeField] public bool ShowCoolTime { get; set; }
-    [SerializeField] public UnitData MyUnitData { get; private set; }
-    [SerializeField] public LevelData MyLevelData { get; private set; }
-    [SerializeField] public SkillData MySkill1Data { get; private set; }
-    [SerializeField] public SkillData MySkill2Data { get; private set; }
-    [SerializeField] public SkillData MySkill3Data { get; private  set; }
-    [SerializeField] public SkillData MySkill4Data { get; private set; }
-    [SerializeField] public ItemData MyItem1Data { get; private set; }
-    [SerializeField] public DefEnum.EUnitState MyUnitState { get; private set; }
+    public DefEnum.EUnit UnitType { get; set; }
+    public bool ShowHp { get; set; }
+    public bool ShowMp { get; set; }
+    public bool ShowCoolTime { get; set; }
+    public DefEnum.EUnitState MyUnitState { get; private set; }
     #endregion
 
     void OnEnable()
@@ -64,10 +65,10 @@ public class CHUnitData : MonoBehaviour
     {
         _cancleTokenSource = new CancellationTokenSource();
 
-        if (UnitCollider == null)
-            UnitCollider = gameObject.GetOrAddComponent<Collider>();
-        if (UnitMesh == null)
-            UnitMesh = gameObject.GetOrAddComponent<MeshRenderer>();
+        if (_unitCollider == null)
+            _unitCollider = gameObject.GetOrAddComponent<Collider>();
+        if (_unitMesh == null)
+            _unitMesh = gameObject.GetOrAddComponent<MeshRenderer>();
     }
 
     private void Start()
@@ -97,15 +98,15 @@ public class CHUnitData : MonoBehaviour
                     return;
 
                 //# 초당 Hp/Mp 회복 적용
-                if (MyItem1Data == null)
+                if (_item1Data == null)
                 {
-                    ChangeHp(DefEnum.ESkill.None, this, MyUnitData.hpRegenPerSecond, DefEnum.EDamageType1.None);
-                    ChangeMp(DefEnum.ESkill.None, this, MyUnitData.mpRegenPerSecond, DefEnum.EDamageType1.None);
+                    ChangeHp(DefEnum.ESkill.None, this, _unitData.hpRegenPerSecond, DefEnum.EDamageType1.None);
+                    ChangeMp(DefEnum.ESkill.None, this, _unitData.mpRegenPerSecond, DefEnum.EDamageType1.None);
                 }
                 else
                 {
-                    ChangeHp(DefEnum.ESkill.None, this, MyUnitData.hpRegenPerSecond + MyItem1Data.hpRegenPerSecond, DefEnum.EDamageType1.None);
-                    ChangeMp(DefEnum.ESkill.None, this, MyUnitData.mpRegenPerSecond + MyItem1Data.mpRegenPerSecond, DefEnum.EDamageType1.None);
+                    ChangeHp(DefEnum.ESkill.None, this, _unitData.hpRegenPerSecond + _item1Data.hpRegenPerSecond, DefEnum.EDamageType1.None);
+                    ChangeMp(DefEnum.ESkill.None, this, _unitData.mpRegenPerSecond + _item1Data.mpRegenPerSecond, DefEnum.EDamageType1.None);
                 }
             });
     }
@@ -117,51 +118,51 @@ public class CHUnitData : MonoBehaviour
         _maxMp = _bonusMp;
         _curHp = _bonusHp;
         _curMp = _bonusMp;
-        UnitCollider.enabled = true;
+        _unitCollider.enabled = true;
 
         if (UnitType == DefEnum.EUnit.None)
         {
             UnitType = (DefEnum.EUnit)UnityEngine.Random.Range(1, (int)DefEnum.EUnit.White);
         }
 
-        MyUnitData = CHMUnit.Instance.GetUnitData(UnitType);
+        _unitData = CHMUnit.Instance.GetUnitData(UnitType);
 
-        if (MyUnitData == null)
+        if (_unitData == null)
         {
             Debug.Log($"{UnitType} UnitData is null");
         }
         else
         {
-            _maxHp += MyUnitData.maxHp;
-            _maxMp += MyUnitData.maxMp;
-            _curHp += MyUnitData.maxHp;
-            _curMp += MyUnitData.maxMp;
+            _maxHp += _unitData.maxHp;
+            _maxMp += _unitData.maxMp;
+            _curHp += _unitData.maxHp;
+            _curMp += _unitData.maxMp;
 
             CHMUnit.Instance.SetUnit(gameObject, UnitType);
 
-            MyLevelData = CHMLevel.Instance.GetLevelData(UnitType, MyUnitData.eLevel);
+            _levelData = CHMLevel.Instance.GetLevelData(UnitType, _unitData.eLevel);
 
-            if (MyLevelData != null)
+            if (_levelData != null)
             {
-                _maxHp += MyLevelData.maxHp;
-                _maxMp += MyLevelData.maxMp;
-                _curHp += MyLevelData.maxHp;
-                _curMp += MyLevelData.maxMp;
+                _maxHp += _levelData.maxHp;
+                _maxMp += _levelData.maxMp;
+                _curHp += _levelData.maxHp;
+                _curMp += _levelData.maxMp;
             }
 
-            MySkill1Data = CHMSkill.Instance.GetSkillData(MyUnitData.eSkill1);
-            MySkill2Data = CHMSkill.Instance.GetSkillData(MyUnitData.eSkill2);
-            MySkill3Data = CHMSkill.Instance.GetSkillData(MyUnitData.eSkill3);
-            MySkill4Data = CHMSkill.Instance.GetSkillData(MyUnitData.eSkill4);
+            _skill1Data = CHMSkill.Instance.GetSkillData(_unitData.eSkill1);
+            _skill2Data = CHMSkill.Instance.GetSkillData(_unitData.eSkill2);
+            _skill3Data = CHMSkill.Instance.GetSkillData(_unitData.eSkill3);
+            _skill4Data = CHMSkill.Instance.GetSkillData(_unitData.eSkill4);
 
-            MyItem1Data = CHMItem.Instance.GetItemData(MyUnitData.eItem1);
+            _item1Data = CHMItem.Instance.GetItemData(_unitData.eItem1);
 
-            if (MyItem1Data != null)
+            if (_item1Data != null)
             {
-                _maxHp += MyItem1Data.maxHp;
-                _maxMp += MyItem1Data.maxMp;
-                _curHp += MyItem1Data.maxHp;
-                _curMp += MyItem1Data.maxMp;
+                _maxHp += _item1Data.maxHp;
+                _maxMp += _item1Data.maxMp;
+                _curHp += _item1Data.maxHp;
+                _curMp += _item1Data.maxMp;
             }
         }
     }
@@ -180,12 +181,12 @@ public class CHUnitData : MonoBehaviour
                     _gaugeBarHP = gaugeBar.GetComponent<CHGaugeBar>();
                     if (_gaugeBarHP)
                     {
-                        if (UnitCollider == null)
+                        if (_unitCollider == null)
                         {
-                            UnitCollider = gameObject.GetOrAddComponent<Collider>();
+                            _unitCollider = gameObject.GetOrAddComponent<Collider>();
                         }
 
-                        _gaugeBarHP.Init(this, UnitCollider.bounds.size.y / 2f / transform.localScale.x, 2.3f);
+                        _gaugeBarHP.Init(this, _unitCollider.bounds.size.y / 2f / transform.localScale.x, 2.3f);
                         _gaugeBarHP.SetGaugeBar(1, 1, 0);
                     }
                 }
@@ -209,12 +210,12 @@ public class CHUnitData : MonoBehaviour
                     _gaugeBarMP = gaugeBar.GetComponent<CHGaugeBar>();
                     if (_gaugeBarMP)
                     {
-                        if (UnitCollider == null)
+                        if (_unitCollider == null)
                         {
-                            UnitCollider = gameObject.GetOrAddComponent<Collider>();
+                            _unitCollider = gameObject.GetOrAddComponent<Collider>();
                         }
 
-                        _gaugeBarMP.Init(this, UnitCollider.bounds.size.y / 2f / transform.localScale.x, 1.7f);
+                        _gaugeBarMP.Init(this, _unitCollider.bounds.size.y / 2f / transform.localScale.x, 1.7f);
                         _gaugeBarMP.SetGaugeBar(1, 1, 0f);
                     }
                 }
@@ -238,12 +239,12 @@ public class CHUnitData : MonoBehaviour
                     _gaugeBarCT = gaugeBar.GetComponent<CHGaugeBar>();
                     if (_gaugeBarCT)
                     {
-                        if (UnitCollider == null)
+                        if (_unitCollider == null)
                         {
-                            UnitCollider = gameObject.GetOrAddComponent<Collider>();
+                            _unitCollider = gameObject.GetOrAddComponent<Collider>();
                         }
 
-                        _gaugeBarCT.Init(this, UnitCollider.bounds.size.y / 2f / transform.localScale.x, -2f);
+                        _gaugeBarCT.Init(this, _unitCollider.bounds.size.y / 2f / transform.localScale.x, -2f);
                         _gaugeBarCT.SetGaugeBar(1, 1, 0f);
                     }
                 }
@@ -257,22 +258,31 @@ public class CHUnitData : MonoBehaviour
     }
     #endregion
 
-    public UnitData GetOriginUnitData() { return MyUnitData; }
-    public SkillData GetOriginSkill1Data() { return MySkill1Data; }
-    public SkillData GetOriginSkill2Data() { return MySkill2Data; }
-    public SkillData GetOriginSkill3Data() { return MySkill3Data; }
-    public SkillData GetOriginSkill4Data() { return MySkill4Data; }
-    public ItemData GetOriginItem1Data() { return MyItem1Data; }
+    #region Getter
+    public bool CheckSkill1 => _skill1Data != null;
+    public bool CheckSkill2 => _skill2Data != null;
+    public bool CheckSkill3 => _skill3Data != null;
+    public bool CheckSkill4 => _skill4Data != null;
+
+    public bool IsSkill1Channeling => _skill1Data == null ? false : _skill1Data.isChanneling;
+    public bool IsSkill2Channeling => _skill2Data == null ? false : _skill2Data.isChanneling;
+    public bool IsSkill3Channeling => _skill3Data == null ? false : _skill3Data.isChanneling;
+    public bool IsSkill4Channeling => _skill4Data == null ? false : _skill4Data.isChanneling;
+
+    public DefEnum.ESkill Skill1Type => _skill1Data == null ? DefEnum.ESkill.None : _skill1Data.eSkill;
+    public DefEnum.ESkill Skill2Type => _skill2Data == null ? DefEnum.ESkill.None : _skill2Data.eSkill;
+    public DefEnum.ESkill Skill3Type => _skill3Data == null ? DefEnum.ESkill.None : _skill3Data.eSkill;
+    public DefEnum.ESkill Skill4Type => _skill4Data == null ? DefEnum.ESkill.None : _skill4Data.eSkill;
+
     public float GetCurrentMaxHp()
     {
         float maxHp = 0f;
 
-        maxHp += GetOriginUnitData().maxHp;
+        maxHp += _unitData.maxHp;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            maxHp += item1.maxHp;
+            maxHp += _item1Data.maxHp;
         }
 
         return maxHp;
@@ -281,12 +291,11 @@ public class CHUnitData : MonoBehaviour
     {
         float hpRegenPerSecond = 0f;
 
-        hpRegenPerSecond += GetOriginUnitData().hpRegenPerSecond;
+        hpRegenPerSecond += _unitData.hpRegenPerSecond;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            hpRegenPerSecond += item1.hpRegenPerSecond;
+            hpRegenPerSecond += _item1Data.hpRegenPerSecond;
         }
 
         return hpRegenPerSecond;
@@ -295,12 +304,11 @@ public class CHUnitData : MonoBehaviour
     {
         float maxMp = 0f;
 
-        maxMp += GetOriginUnitData().maxMp;
+        maxMp += _unitData.maxMp;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            maxMp += item1.maxMp;
+            maxMp += _item1Data.maxMp;
         }
 
         return maxMp;
@@ -309,12 +317,11 @@ public class CHUnitData : MonoBehaviour
     {
         float mpRegenPerSecond = 0f;
 
-        mpRegenPerSecond += GetOriginUnitData().mpRegenPerSecond;
+        mpRegenPerSecond += _unitData.mpRegenPerSecond;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            mpRegenPerSecond += item1.mpRegenPerSecond;
+            mpRegenPerSecond += _item1Data.mpRegenPerSecond;
         }
 
         return mpRegenPerSecond;
@@ -323,12 +330,11 @@ public class CHUnitData : MonoBehaviour
     {
         float attackPower = 0f;
 
-        attackPower += GetOriginUnitData().attackPower;
+        attackPower += _unitData.attackPower;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            attackPower += item1.attackPower;
+            attackPower += _item1Data.attackPower;
         }
 
         return attackPower;
@@ -337,12 +343,11 @@ public class CHUnitData : MonoBehaviour
     {
         float defensePower = 0f;
 
-        defensePower += GetOriginUnitData().defensePower;
+        defensePower += _unitData.defensePower;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            defensePower += item1.defensePower;
+            defensePower += _item1Data.defensePower;
         }
 
         return defensePower;
@@ -351,12 +356,11 @@ public class CHUnitData : MonoBehaviour
     {
         float moveSpeed = 0f;
 
-        moveSpeed += GetOriginUnitData().moveSpeed;
+        moveSpeed += _unitData.moveSpeed;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            moveSpeed += item1.moveSpeed;
+            moveSpeed += _item1Data.moveSpeed;
         }
 
         return moveSpeed;
@@ -365,12 +369,11 @@ public class CHUnitData : MonoBehaviour
     {
         float rotateSpeed = 0f;
 
-        rotateSpeed += GetOriginUnitData().rotateSpeed;
+        rotateSpeed += _unitData.rotateSpeed;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            rotateSpeed += item1.rotateSpeed;
+            rotateSpeed += _item1Data.rotateSpeed;
         }
 
         return rotateSpeed;
@@ -379,12 +382,11 @@ public class CHUnitData : MonoBehaviour
     {
         float range = 0f;
 
-        range += GetOriginUnitData().range;
+        range += _unitData.range;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            range += item1.range;
+            range += _item1Data.range;
         }
 
         return range;
@@ -393,12 +395,11 @@ public class CHUnitData : MonoBehaviour
     {
         float rangeMulti = 0f;
 
-        rangeMulti += GetOriginUnitData().rangeMulti;
+        rangeMulti += _unitData.rangeMulti;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            rangeMulti += item1.rangeMulti;
+            rangeMulti += _item1Data.rangeMulti;
         }
 
         return rangeMulti;
@@ -407,12 +408,11 @@ public class CHUnitData : MonoBehaviour
     {
         float viewAngle = 0f;
 
-        viewAngle += GetOriginUnitData().viewAngle;
+        viewAngle += _unitData.viewAngle;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            viewAngle += item1.viewAngle;
+            viewAngle += _item1Data.viewAngle;
         }
 
         return viewAngle;
@@ -421,12 +421,11 @@ public class CHUnitData : MonoBehaviour
     {
         float distance = 0f;
 
-        distance += GetOriginSkill1Data().distance;
+        distance += _skill1Data.distance;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            distance += item1.distance;
+            distance += _item1Data.distance;
         }
 
         return distance;
@@ -435,12 +434,11 @@ public class CHUnitData : MonoBehaviour
     {
         float distance = 0f;
 
-        distance += GetOriginSkill2Data().distance;
+        distance += _skill2Data.distance;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            distance += item1.distance;
+            distance += _item1Data.distance;
         }
 
         return distance;
@@ -449,12 +447,11 @@ public class CHUnitData : MonoBehaviour
     {
         float distance = 0f;
 
-        distance += GetOriginSkill3Data().distance;
+        distance += _skill3Data.distance;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            distance += item1.distance;
+            distance += _item1Data.distance;
         }
 
         return distance;
@@ -463,12 +460,11 @@ public class CHUnitData : MonoBehaviour
     {
         float distance = 0f;
 
-        distance += GetOriginSkill4Data().distance;
+        distance += _skill4Data.distance;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            distance += item1.distance;
+            distance += _item1Data.distance;
         }
 
         return distance;
@@ -477,12 +473,11 @@ public class CHUnitData : MonoBehaviour
     {
         float coolTime = 0f;
 
-        coolTime += GetOriginSkill1Data().coolTime;
+        coolTime += _skill1Data.coolTime;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            coolTime += item1.coolTime;
+            coolTime += _item1Data.coolTime;
         }
 
         return coolTime;
@@ -491,12 +486,11 @@ public class CHUnitData : MonoBehaviour
     {
         float coolTime = 0f;
 
-        coolTime += GetOriginSkill2Data().coolTime;
+        coolTime += _skill2Data.coolTime;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            coolTime += item1.coolTime;
+            coolTime += _item1Data.coolTime;
         }
 
         return coolTime;
@@ -505,12 +499,11 @@ public class CHUnitData : MonoBehaviour
     {
         float coolTime = 0f;
 
-        coolTime += GetOriginSkill3Data().coolTime;
+        coolTime += _skill3Data.coolTime;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            coolTime += item1.coolTime;
+            coolTime += _item1Data.coolTime;
         }
 
         return coolTime;
@@ -519,12 +512,11 @@ public class CHUnitData : MonoBehaviour
     {
         float coolTime = 0f;
 
-        coolTime += GetOriginSkill4Data().coolTime;
+        coolTime += _skill4Data.coolTime;
 
-        ItemData item1 = GetOriginItem1Data();
-        if (item1 != null)
+        if (_item1Data != null)
         {
-            coolTime += item1.coolTime;
+            coolTime += _item1Data.coolTime;
         }
 
         return coolTime;
@@ -537,6 +529,14 @@ public class CHUnitData : MonoBehaviour
     {
         return _curMp;
     }
+    public float GetPlusDamage()
+    {
+        if (_item1Data == null)
+            return _levelData.damage;
+
+        return _levelData.damage + _item1Data.damage;
+    }
+    #endregion
 
     public void SetAirborne(bool isAirborne, DG.Tweening.Sequence sequence = null)
     {
@@ -660,34 +660,34 @@ public class CHUnitData : MonoBehaviour
 
     public void ChangeSkill1(DefEnum.ESkill eSkill)
     {
-        MySkill1Data = CHMSkill.Instance.GetSkillData(eSkill);
+        _skill1Data = CHMSkill.Instance.GetSkillData(eSkill);
     }
 
     public void ChangeSkill2(DefEnum.ESkill eSkill)
     {
-        MySkill2Data = CHMSkill.Instance.GetSkillData(eSkill);
+        _skill2Data = CHMSkill.Instance.GetSkillData(eSkill);
     }
 
     public void ChangeSkill3(DefEnum.ESkill eSkill)
     {
-        MySkill3Data = CHMSkill.Instance.GetSkillData(eSkill);
+        _skill3Data = CHMSkill.Instance.GetSkillData(eSkill);
     }
 
     public void ChangeSkill4(DefEnum.ESkill eSkill)
     {
-        MySkill4Data = CHMSkill.Instance.GetSkillData(eSkill);
+        _skill4Data = CHMSkill.Instance.GetSkillData(eSkill);
     }
 
     public void ChangeItem1(DefEnum.EItem eItem)
     {
-        MyItem1Data = CHMItem.Instance.GetItemData(eItem);
-        if (MyItem1Data != null)
+        _item1Data = CHMItem.Instance.GetItemData(eItem);
+        if (_item1Data != null)
         {
-            _maxHp = MyUnitData.maxHp + MyItem1Data.maxHp;
-            _maxMp = MyUnitData.maxMp + MyItem1Data.maxMp;
+            _maxHp = _unitData.maxHp + _item1Data.maxHp;
+            _maxMp = _unitData.maxMp + _item1Data.maxMp;
 
-            _curHp += MyItem1Data.maxHp;
-            _curMp += MyItem1Data.maxMp;
+            _curHp += _item1Data.maxHp;
+            _curMp += _item1Data.maxMp;
         }
     }
 
@@ -697,12 +697,12 @@ public class CHUnitData : MonoBehaviour
         if (changeLevelData == null)
             return;
 
-        if (MyLevelData != null)
+        if (_levelData != null)
         {
-            _maxHp += changeLevelData.maxHp - MyLevelData.maxHp;
-            _maxMp += changeLevelData.maxMp - MyLevelData.maxMp;
-            _curHp += changeLevelData.maxHp - MyLevelData.maxHp;
-            _curMp += changeLevelData.maxMp - MyLevelData.maxMp;
+            _maxHp += changeLevelData.maxHp - _levelData.maxHp;
+            _maxMp += changeLevelData.maxMp - _levelData.maxMp;
+            _curHp += changeLevelData.maxHp - _levelData.maxHp;
+            _curMp += changeLevelData.maxMp - _levelData.maxMp;
         }
         else
         {
@@ -712,7 +712,7 @@ public class CHUnitData : MonoBehaviour
             _curMp += changeLevelData.maxMp;
         }
 
-        MyLevelData = changeLevelData;
+        _levelData = changeLevelData;
     }
 
     void AtOnceChangeHp(DefEnum.ESkill eSkill, CHUnitData attackUnit, float value)
@@ -735,7 +735,7 @@ public class CHUnitData : MonoBehaviour
         if (eSkill != DefEnum.ESkill.None)
         {
             Debug.Log($"attacker : {attackUnit.name}, skill : {eSkill.ToString()}, Damage : {value}" +
-            $"{MyUnitData.unitName}<{gameObject.name}> => Hp : {hpOrigin} -> {hpResult}");
+            $"{_unitData.unitName}<{gameObject.name}> => Hp : {hpOrigin} -> {hpResult}");
         }
 
         //# 죽음 Die
@@ -759,7 +759,7 @@ public class CHUnitData : MonoBehaviour
 
             MyUnitState |= DefEnum.EUnitState.IsDie;
 
-            UnitCollider.enabled = false;
+            _unitCollider.enabled = false;
 
             if (_gaugeBarHP)
                 _gaugeBarHP.gameObject.SetActive(false);
@@ -789,30 +789,30 @@ public class CHUnitData : MonoBehaviour
         if (eSkill != DefEnum.ESkill.None)
         {
             Debug.Log($"attacker : {attackUnit.name}, skill : {eSkill.ToString()}, " +
-            $"{MyUnitData.unitName}<{gameObject.name}> => Mp : {mpOrigin} -> {mpResult}");
+            $"{_unitData.unitName}<{gameObject.name}> => Mp : {mpOrigin} -> {mpResult}");
         }
     }
 
     void AtOnceChangeAttackPower(DefEnum.ESkill eSkill, CHUnitData attackUnit, float value)
     {
-        float attackPowerOrigin = MyUnitData.attackPower;
-        float attackPowerResult = MyUnitData.attackPower + value;
+        float attackPowerOrigin = _unitData.attackPower;
+        float attackPowerResult = _unitData.attackPower + value;
         CheckMaxStatValue(DefEnum.EStat.AttackPower, ref attackPowerResult);
 
-        MyUnitData.attackPower = attackPowerResult;
+        _unitData.attackPower = attackPowerResult;
         Debug.Log($"attacker : {attackUnit.name}, skill : {eSkill.ToString()}, " +
-            $"{MyUnitData.unitName}<{gameObject.name}> => AttackPower : {attackPowerOrigin} -> {attackPowerResult}");
+            $"{_unitData.unitName}<{gameObject.name}> => AttackPower : {attackPowerOrigin} -> {attackPowerResult}");
     }
 
     void AtOnceChangeDefensePower(DefEnum.ESkill eSkill, CHUnitData attackUnit, float value)
     {
-        float defensePowerOrigin = MyUnitData.defensePower;
-        float defensePowerResult = MyUnitData.defensePower + value;
+        float defensePowerOrigin = _unitData.defensePower;
+        float defensePowerResult = _unitData.defensePower + value;
         CheckMaxStatValue(DefEnum.EStat.DefensePower, ref defensePowerResult);
 
-        MyUnitData.attackPower = defensePowerResult;
+        _unitData.attackPower = defensePowerResult;
         Debug.Log($"attacker : {attackUnit.name}, skill : {eSkill.ToString()}, " +
-            $"{MyUnitData.unitName}<{gameObject.name}> => DefensePower : {defensePowerOrigin} -> {defensePowerResult}");
+            $"{_unitData.unitName}<{gameObject.name}> => DefensePower : {defensePowerOrigin} -> {defensePowerResult}");
     }
 
     async void ContinuousChangeHp(DefEnum.ESkill eSkill, CHUnitData attackUnit, float time, int count, float value)
