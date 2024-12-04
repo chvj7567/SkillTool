@@ -117,8 +117,6 @@ public class CHTargetTracker : MonoBehaviour
     {
         _unit.StandardAxis = _standardAxis;
 
-        SetValue(_unit);
-
         //# 프레임 단위로 타겟 감지
         gameObject.UpdateAsObservable().Subscribe(_ =>
         {
@@ -169,7 +167,7 @@ public class CHTargetTracker : MonoBehaviour
                     _unit.SetAgentStoppingDistance(_skill1Distance);
 
                     //# 공격 가능한 상태이면(CC 등 안 걸려있는 상태인지)
-                    if (_unit.IsNormalState)
+                    if (_unit.IsNormal)
                     {
                         //# 스킬 사정거리 밖에 있는 경우
                         if (_trackerTarget.distance > _skill1Distance)

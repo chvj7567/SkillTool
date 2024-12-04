@@ -9,7 +9,35 @@ using UnityEngine;
 using UnityEngine.AI;
 using static DefEnum;
 
-public partial class CHUnit : MonoBehaviour
+public interface IUnitInfo
+{
+    public DefEnum.EUnit UnitType { get; }
+    public DefEnum.EStandardAxis StandardAxis { get; }
+    public DefEnum.ESkill Skill1Type { get; }
+
+    public bool IsNormal { get; }
+    public bool IsDie { get; }
+    public bool IsAirborne { get; }
+
+    public Transform UnitTransform { get; }
+    public DefClass.TargetInfo Target { get; }
+}
+
+public interface IUnitGauge
+{
+    public void SetHPGaugeBar(float maxValue, float curValue, float damage, float backGaugeTime, float gaugeTime, bool viewDamage = true);
+    public void SetMPGaugeBar(float maxValue, float curValue, float damage, float backGaugeTime, float gaugeTime, bool viewDamage = true);
+    public void SetCTGaugeBar(float maxValue, float curValue, float damage, float backGaugeTime, float gaugeTime, bool viewDamage = true);
+}
+
+public interface IUnitAnim
+{
+    public void SetAttackAnim();
+    public void SetSightAnim(bool sight);
+    public float GetSkillAnimTime(DefEnum.EAnim eAnim);
+}
+
+public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 {
     #region Parameter
     [SerializeField] NavMeshAgent _agent;
@@ -17,7 +45,7 @@ public partial class CHUnit : MonoBehaviour
     [SerializeField] Collider _unitCollider;
     [SerializeField] CHTargetTracker _targetTracker;
     [SerializeField] List<string> _liAnimName = new List<string>();
-
+    [SerializeField, ReadOnly] CHSkill _skill;
     [SerializeField, ReadOnly] Dictionary<string, float> _dicAnimTime = new Dictionary<string, float>();
     [SerializeField, ReadOnly] float _maxHp;
     [SerializeField, ReadOnly] float _maxMp;
@@ -32,11 +60,7 @@ public partial class CHUnit : MonoBehaviour
 
     UnitData _unitData;
     LevelData _levelData;
-    SkillData _skill1Data;
-    SkillData _skill2Data;
-    SkillData _skill3Data;
-    SkillData _skill4Data;
-    ItemData _item1Data;
+
     CancellationTokenSource _cancleTokenSource;
     Sequence _seqAirborn;
     IDisposable _disposePerSecond;
@@ -49,6 +73,11 @@ public partial class CHUnit : MonoBehaviour
     public bool ShowMp { get; set; }
     public bool ShowCoolTime { get; set; }
     public DefEnum.EUnitState MyUnitState { get; private set; }
+    public Transform UnitTransform => transform;
+    public DefClass.TargetInfo Target => _targetTracker.GetClosestTargetInfo();
+    public bool IsNormal => MyUnitState == 0;
+    public bool IsDie => (MyUnitState & DefEnum.EUnitState.IsDie) != 0;
+    public bool IsAirborne => (MyUnitState & DefEnum.EUnitState.IsAirborne) != 0;
     #endregion
 
     void OnEnable()
@@ -79,7 +108,7 @@ public partial class CHUnit : MonoBehaviour
 
     private void Update()
     {
-        SkillUpdate();
+        _skill.OnUpdate();
     }
 
     private void OnDestroy()
@@ -94,7 +123,7 @@ public partial class CHUnit : MonoBehaviour
     void Init()
     {
         InitUnitData();
-        InitSkill();
+        _targetTracker.SetValue(this);
         InitGaugeBar(ShowHp, ShowMp, ShowCoolTime);
 
         _disposePerSecond = gameObject.UpdateAsObservable()
@@ -105,16 +134,8 @@ public partial class CHUnit : MonoBehaviour
                     return;
 
                 //# 초당 Hp/Mp 회복 적용
-                if (_item1Data == null)
-                {
-                    ChangeHp(DefEnum.ESkill.None, this, _unitData.hpRegenPerSecond, DefEnum.EDamageType1.None);
-                    ChangeMp(DefEnum.ESkill.None, this, _unitData.mpRegenPerSecond, DefEnum.EDamageType1.None);
-                }
-                else
-                {
-                    ChangeHp(DefEnum.ESkill.None, this, _unitData.hpRegenPerSecond + _item1Data.hpRegenPerSecond, DefEnum.EDamageType1.None);
-                    ChangeMp(DefEnum.ESkill.None, this, _unitData.mpRegenPerSecond + _item1Data.mpRegenPerSecond, DefEnum.EDamageType1.None);
-                }
+                ChangeHp(DefEnum.ESkill.None, this, _unitData.hpRegenPerSecond, DefEnum.EDamageType1.None);
+                ChangeMp(DefEnum.ESkill.None, this, _unitData.mpRegenPerSecond, DefEnum.EDamageType1.None);
             });
     }
 
@@ -155,6 +176,8 @@ public partial class CHUnit : MonoBehaviour
 
             CHMUnit.Instance.SetUnit(gameObject, UnitType);
 
+            _skill.Init(_cancleTokenSource, this, this, this);
+
             _levelData = CHMLevel.Instance.GetLevelData(UnitType, _unitData.eLevel);
 
             if (_levelData != null)
@@ -163,21 +186,6 @@ public partial class CHUnit : MonoBehaviour
                 _maxMp += _levelData.maxMp;
                 _curHp += _levelData.maxHp;
                 _curMp += _levelData.maxMp;
-            }
-
-            _skill1Data = CHMSkill.Instance.GetSkillData(_unitData.eSkill1);
-            _skill2Data = CHMSkill.Instance.GetSkillData(_unitData.eSkill2);
-            _skill3Data = CHMSkill.Instance.GetSkillData(_unitData.eSkill3);
-            _skill4Data = CHMSkill.Instance.GetSkillData(_unitData.eSkill4);
-
-            _item1Data = CHMItem.Instance.GetItemData(_unitData.eItem1);
-
-            if (_item1Data != null)
-            {
-                _maxHp += _item1Data.maxHp;
-                _maxMp += _item1Data.maxMp;
-                _curHp += _item1Data.maxHp;
-                _curMp += _item1Data.maxMp;
             }
         }
     }
@@ -276,20 +284,7 @@ public partial class CHUnit : MonoBehaviour
     #region Getter
     public bool IsOnNavMesh => _agent.isOnNavMesh;
 
-    public bool CheckSkill1 => _skill1Data != null;
-    public bool CheckSkill2 => _skill2Data != null;
-    public bool CheckSkill3 => _skill3Data != null;
-    public bool CheckSkill4 => _skill4Data != null;
-
-    public bool IsSkill1Channeling => _skill1Data == null ? false : _skill1Data.isChanneling;
-    public bool IsSkill2Channeling => _skill2Data == null ? false : _skill2Data.isChanneling;
-    public bool IsSkill3Channeling => _skill3Data == null ? false : _skill3Data.isChanneling;
-    public bool IsSkill4Channeling => _skill4Data == null ? false : _skill4Data.isChanneling;
-
-    public DefEnum.ESkill Skill1Type => _skill1Data == null ? DefEnum.ESkill.None : _skill1Data.eSkill;
-    public DefEnum.ESkill Skill2Type => _skill2Data == null ? DefEnum.ESkill.None : _skill2Data.eSkill;
-    public DefEnum.ESkill Skill3Type => _skill3Data == null ? DefEnum.ESkill.None : _skill3Data.eSkill;
-    public DefEnum.ESkill Skill4Type => _skill4Data == null ? DefEnum.ESkill.None : _skill4Data.eSkill;
+    public DefEnum.ESkill Skill1Type => _unitData.eSkill1;
 
     public int AttackRange
     {
@@ -321,11 +316,6 @@ public partial class CHUnit : MonoBehaviour
 
         maxHp += _unitData.maxHp;
 
-        if (_item1Data != null)
-        {
-            maxHp += _item1Data.maxHp;
-        }
-
         return maxHp;
     }
     public float GetCurrentHpRegenPerSecond()
@@ -333,11 +323,6 @@ public partial class CHUnit : MonoBehaviour
         float hpRegenPerSecond = 0f;
 
         hpRegenPerSecond += _unitData.hpRegenPerSecond;
-
-        if (_item1Data != null)
-        {
-            hpRegenPerSecond += _item1Data.hpRegenPerSecond;
-        }
 
         return hpRegenPerSecond;
     }
@@ -347,11 +332,6 @@ public partial class CHUnit : MonoBehaviour
 
         maxMp += _unitData.maxMp;
 
-        if (_item1Data != null)
-        {
-            maxMp += _item1Data.maxMp;
-        }
-
         return maxMp;
     }
     public float GetCurrentMpRegenPerSecond()
@@ -359,11 +339,6 @@ public partial class CHUnit : MonoBehaviour
         float mpRegenPerSecond = 0f;
 
         mpRegenPerSecond += _unitData.mpRegenPerSecond;
-
-        if (_item1Data != null)
-        {
-            mpRegenPerSecond += _item1Data.mpRegenPerSecond;
-        }
 
         return mpRegenPerSecond;
     }
@@ -373,11 +348,6 @@ public partial class CHUnit : MonoBehaviour
 
         attackPower += _unitData.attackPower;
 
-        if (_item1Data != null)
-        {
-            attackPower += _item1Data.attackPower;
-        }
-
         return attackPower;
     }
     public float GetCurrentDefensePower()
@@ -385,11 +355,6 @@ public partial class CHUnit : MonoBehaviour
         float defensePower = 0f;
 
         defensePower += _unitData.defensePower;
-
-        if (_item1Data != null)
-        {
-            defensePower += _item1Data.defensePower;
-        }
 
         return defensePower;
     }
@@ -399,11 +364,6 @@ public partial class CHUnit : MonoBehaviour
 
         moveSpeed += _unitData.moveSpeed;
 
-        if (_item1Data != null)
-        {
-            moveSpeed += _item1Data.moveSpeed;
-        }
-
         return moveSpeed;
     }
     public float GetCurrentRotateSpeed()
@@ -411,11 +371,6 @@ public partial class CHUnit : MonoBehaviour
         float rotateSpeed = 0f;
 
         rotateSpeed += _unitData.rotateSpeed;
-
-        if (_item1Data != null)
-        {
-            rotateSpeed += _item1Data.rotateSpeed;
-        }
 
         return rotateSpeed;
     }
@@ -425,11 +380,6 @@ public partial class CHUnit : MonoBehaviour
 
         range += _unitData.range;
 
-        if (_item1Data != null)
-        {
-            range += _item1Data.range;
-        }
-
         return range;
     }
     public float GetCurrentRangeMulti()
@@ -437,11 +387,6 @@ public partial class CHUnit : MonoBehaviour
         float rangeMulti = 0f;
 
         rangeMulti += _unitData.rangeMulti;
-
-        if (_item1Data != null)
-        {
-            rangeMulti += _item1Data.rangeMulti;
-        }
 
         return rangeMulti;
     }
@@ -451,116 +396,7 @@ public partial class CHUnit : MonoBehaviour
 
         viewAngle += _unitData.viewAngle;
 
-        if (_item1Data != null)
-        {
-            viewAngle += _item1Data.viewAngle;
-        }
-
         return viewAngle;
-    }
-    public float GetCurrentSkill1Distance()
-    {
-        float distance = 0f;
-
-        distance += _skill1Data.distance;
-
-        if (_item1Data != null)
-        {
-            distance += _item1Data.distance;
-        }
-
-        return distance;
-    }
-    public float GetCurrentSkill2Distance()
-    {
-        float distance = 0f;
-
-        distance += _skill2Data.distance;
-
-        if (_item1Data != null)
-        {
-            distance += _item1Data.distance;
-        }
-
-        return distance;
-    }
-    public float GetCurrentSkill3Distance()
-    {
-        float distance = 0f;
-
-        distance += _skill3Data.distance;
-
-        if (_item1Data != null)
-        {
-            distance += _item1Data.distance;
-        }
-
-        return distance;
-    }
-    public float GetCurrentSkill4Distance()
-    {
-        float distance = 0f;
-
-        distance += _skill4Data.distance;
-
-        if (_item1Data != null)
-        {
-            distance += _item1Data.distance;
-        }
-
-        return distance;
-    }
-    public float GetCurrentSkill1CoolTime()
-    {
-        float coolTime = 0f;
-
-        coolTime += _skill1Data.coolTime;
-
-        if (_item1Data != null)
-        {
-            coolTime += _item1Data.coolTime;
-        }
-
-        return coolTime;
-    }
-    public float GetCurrentSkill2CoolTime()
-    {
-        float coolTime = 0f;
-
-        coolTime += _skill2Data.coolTime;
-
-        if (_item1Data != null)
-        {
-            coolTime += _item1Data.coolTime;
-        }
-
-        return coolTime;
-    }
-    public float GetCurrentSkill3CoolTime()
-    {
-        float coolTime = 0f;
-
-        coolTime += _skill3Data.coolTime;
-
-        if (_item1Data != null)
-        {
-            coolTime += _item1Data.coolTime;
-        }
-
-        return coolTime;
-    }
-    public float GetCurrentSkill4CoolTime()
-    {
-        float coolTime = 0f;
-
-        coolTime += _skill4Data.coolTime;
-
-        if (_item1Data != null)
-        {
-            coolTime += _item1Data.coolTime;
-        }
-
-        return coolTime;
     }
     public float GetCurrentHp()
     {
@@ -572,10 +408,11 @@ public partial class CHUnit : MonoBehaviour
     }
     public float GetPlusDamage()
     {
-        if (_item1Data == null)
-            return _levelData.damage;
-
-        return _levelData.damage + _item1Data.damage;
+        return _levelData.damage;
+    }
+    public float GetCurrentSkill1Distance()
+    {
+        return _skill.Skill1Distance;
     }
     #endregion
 
@@ -589,7 +426,7 @@ public partial class CHUnit : MonoBehaviour
         _animator.SetTrigger(AttackRange);
     }
 
-    public float GetSkillAnimTime(EAnim eAnim)
+    public float GetSkillAnimTime(DefEnum.EAnim eAnim)
     {
         return _dicAnimTime[_liAnimName[(int)eAnim]];
     }
@@ -703,12 +540,6 @@ public partial class CHUnit : MonoBehaviour
         _gaugeBarCT?.SetGaugeBar(maxValue, curValue, damage, backGaugeTime, gaugeTime, viewDamage);
     }
 
-    public bool IsNormalState => MyUnitState == 0;
-
-    public bool IsDie => (MyUnitState & DefEnum.EUnitState.IsDie) != 0;
-
-    public bool IsAirborne => (MyUnitState & DefEnum.EUnitState.IsAirborne) != 0;
-
     public void ChangeHp(DefEnum.ESkill eSkill, CHUnit attackUnit, float value, DefEnum.EDamageType1 eDamageType1)
     {
         if (IsDie == false)
@@ -791,39 +622,6 @@ public partial class CHUnit : MonoBehaviour
                     AtOnceChangeDefensePower(eSkill, attackUnit, value);
                     break;
             }
-        }
-    }
-
-    public void ChangeSkill1(DefEnum.ESkill eSkill)
-    {
-        _skill1Data = CHMSkill.Instance.GetSkillData(eSkill);
-    }
-
-    public void ChangeSkill2(DefEnum.ESkill eSkill)
-    {
-        _skill2Data = CHMSkill.Instance.GetSkillData(eSkill);
-    }
-
-    public void ChangeSkill3(DefEnum.ESkill eSkill)
-    {
-        _skill3Data = CHMSkill.Instance.GetSkillData(eSkill);
-    }
-
-    public void ChangeSkill4(DefEnum.ESkill eSkill)
-    {
-        _skill4Data = CHMSkill.Instance.GetSkillData(eSkill);
-    }
-
-    public void ChangeItem1(DefEnum.EItem eItem)
-    {
-        _item1Data = CHMItem.Instance.GetItemData(eItem);
-        if (_item1Data != null)
-        {
-            _maxHp = _unitData.maxHp + _item1Data.maxHp;
-            _maxMp = _unitData.maxMp + _item1Data.maxMp;
-
-            _curHp += _item1Data.maxHp;
-            _curMp += _item1Data.maxMp;
         }
     }
 
@@ -1065,310 +863,6 @@ public partial class CHUnit : MonoBehaviour
                 break;
             default:
                 break;
-        }
-    }
-}
-
-public partial class CHUnit
-{
-    //# 스킬 사용 여부
-    [SerializeField] bool _useSkill1 = true;
-    [SerializeField] bool _useSkill2 = true;
-    [SerializeField] bool _useSkill3 = true;
-    [SerializeField] bool _useSkill4 = true;
-
-    //# 클릭으로 스킬 활성화할지 여부(활성화 시 스킬 쿨타입 0인 대신 클릭하여 수동 스킬 사용(useSkill 사용))
-    [SerializeField] bool _skill1NoCoolClick = false;
-    [SerializeField] bool _skill2NoCoolClick = false;
-    [SerializeField] bool _skill3NoCoolClick = false;
-    [SerializeField] bool _skill4NoCoolClick = false;
-
-    //# 스킬 잠금 여부(잠금되어있으면 해당 스킬은 NULL)
-    [SerializeField, ReadOnly] bool _skill1Lock = false;
-    [SerializeField, ReadOnly] bool _skill2Lock = false;
-    [SerializeField, ReadOnly] bool _skill3Lock = false;
-    [SerializeField, ReadOnly] bool _skill4Lock = false;
-
-    //# 스킬 채널링 여부(애니메이션 있을 경우)
-    [SerializeField, ReadOnly] bool _skill1Channeling = false;
-    [SerializeField, ReadOnly] bool _skill2Channeling = false;
-    [SerializeField, ReadOnly] bool _skill3Channeling = false;
-    [SerializeField, ReadOnly] bool _skill4Channeling = false;
-
-    //# 스킬 쓴 후 지난 시간
-    [SerializeField, ReadOnly] float _timeSinceLastSkill1 = -1f;
-    [SerializeField, ReadOnly] float _timeSinceLastSkill2 = -1f;
-    [SerializeField, ReadOnly] float _timeSinceLastSkill3 = -1f;
-    [SerializeField, ReadOnly] float _timeSinceLastSkill4 = -1f;
-
-    public void InitSkill()
-    {
-        if (_targetTracker != null)
-        {
-            if (CheckSkill1 == false)
-                _skill1Lock = true;
-            if (CheckSkill2 == false)
-                _skill2Lock = true;
-            if (CheckSkill3 == false)
-                _skill3Lock = true;
-            if (CheckSkill4 == false)
-                _skill4Lock = true;
-
-            _targetTracker.SetValue(this);
-
-            _timeSinceLastSkill1 = -1f;
-            _timeSinceLastSkill2 = -1f;
-            _timeSinceLastSkill3 = -1f;
-            _timeSinceLastSkill4 = -1f;
-        }
-    }
-
-    public async void SkillUpdate()
-    {
-        //# 죽거나 땅에 있는 상태가 아닐 때 (CC 상태인 경우)
-        if (IsDie || IsAirborne)
-            return;
-
-        DefClass.TargetInfo mainTarget = _targetTracker.GetClosestTargetInfo();
-
-        if (_timeSinceLastSkill1 >= 0f && _timeSinceLastSkill1 < GetCurrentSkill1CoolTime())
-        {
-            _timeSinceLastSkill1 += Time.deltaTime;
-            SetCTGaugeBar(GetCurrentSkill1CoolTime(), _timeSinceLastSkill1, 0, 0, 0);
-        }
-        else
-        {
-            _timeSinceLastSkill1 = -1f;
-            SetCTGaugeBar(GetCurrentSkill1CoolTime(), GetCurrentSkill1CoolTime(), 0, 0, 0);
-        }
-
-        if (_timeSinceLastSkill2 >= 0f && _timeSinceLastSkill2 < GetCurrentSkill2CoolTime())
-        {
-            _timeSinceLastSkill2 += Time.deltaTime;
-        }
-        else
-        {
-            _timeSinceLastSkill2 = -1f;
-        }
-
-        if (_timeSinceLastSkill3 >= 0f && _timeSinceLastSkill3 < GetCurrentSkill3CoolTime())
-        {
-            _timeSinceLastSkill3 += Time.deltaTime;
-        }
-        else
-        {
-            _timeSinceLastSkill3 = -1f;
-        }
-
-        if (_timeSinceLastSkill4 >= 0f && _timeSinceLastSkill4 < GetCurrentSkill4CoolTime())
-        {
-            _timeSinceLastSkill4 += Time.deltaTime;
-        }
-        else
-        {
-            _timeSinceLastSkill4 = -1f;
-        }
-
-        if (mainTarget == null || mainTarget.target == null)
-        {
-            SetSightAnim(false);
-        }
-        //# 타겟이 범위 안에 있으면 즉시 공격 후 공격 딜레이 설정
-        else
-        {
-            Vector3 posMainTarget = mainTarget.target.transform.position;
-            Vector3 posMy = transform.position;
-            Vector3 dirMy = Vector3.zero;
-
-            switch (_targetTracker.StandardAxis)
-            {
-                case DefEnum.EStandardAxis.X:
-                    {
-                        dirMy = transform.right;
-                    }
-                    break;
-                case DefEnum.EStandardAxis.Z:
-                    {
-                        dirMy = transform.forward;
-                    }
-                    break;
-            }
-            posMainTarget.y = 0f;
-            posMy.y = 0f;
-            var dirMainTarget = posMainTarget - posMy;
-
-            //# 1번 스킬
-            if ((_skill1Lock == false) && _useSkill1 && IsNormalState)
-            {
-                if ((_skill1Channeling == false) && (_timeSinceLastSkill1 < 0f) && (mainTarget.distance <= GetCurrentSkill1Distance()))
-                {
-                    SetAttackAnim();
-
-                    if (IsSkill1Channeling)
-                    {
-                        //# 애니메이션 시전 시간동안 채널링
-                        _skill1Channeling = true;
-
-                        //# 일단 모든 스킬은 공격 애니메이션으로 통일하지만 추후 활용시 유닛정보에 애니메이션 정보 담아서 활용 가능
-                        float skillAnimTime = GetSkillAnimTime(DefEnum.EAnim.Attack);
-                        if (await Util.Delay(skillAnimTime, _cancleTokenSource) == false)
-                            return;
-
-                        _skill1Channeling = false;
-                    }
-
-                    CHMSkill.Instance.CreateSkill(new DefClass.SkillLocationInfo
-                    {
-                        trCaster = transform,
-                        posCaster = posMy,
-                        dirCaster = dirMy,
-                        trTarget = mainTarget.target.transform,
-                        posTarget = posMainTarget,
-                        dirTarget = posMainTarget - posMy,
-                        posSkill = posMainTarget,
-                        dirSkill = posMainTarget - posMy,
-                    }, Skill1Type);
-
-                    if (_skill1NoCoolClick == true)
-                    {
-                        _useSkill1 = false;
-                    }
-                    else
-                    {
-                        //# 스킬 쿨타임 초기화
-                        _timeSinceLastSkill1 = 0.0001f;
-                    }
-                }
-            }
-
-            //# 2번 스킬
-            if ((_skill2Lock == false) && _useSkill2 && IsNormalState)
-            {
-                if ((_skill2Channeling == false) && _timeSinceLastSkill2 < 0f && mainTarget.distance <= GetCurrentSkill2Distance())
-                {
-                    SetAttackAnim();
-
-                    if (IsSkill2Channeling)
-                    {
-                        //# 애니메이션 시전 시간동안 채널링
-                        _skill2Channeling = true;
-                        //# 일단 모든 스킬은 공격 애니메이션으로 통일하지만 추후 활용시 유닛정보에 애니메이션 정보 담아서 활용 가능
-                        float skillAnimTime = GetSkillAnimTime(DefEnum.EAnim.Attack);
-                        if (await Util.Delay(skillAnimTime, _cancleTokenSource) == false)
-                            return;
-
-                        _skill2Channeling = false;
-                    }
-
-                    CHMSkill.Instance.CreateSkill(new DefClass.SkillLocationInfo
-                    {
-                        trCaster = transform,
-                        posCaster = posMy,
-                        dirCaster = dirMy,
-                        trTarget = mainTarget.target.transform,
-                        posTarget = posMainTarget,
-                        dirTarget = posMainTarget - posMy,
-                        posSkill = posMainTarget,
-                        dirSkill = posMainTarget - posMy,
-                    }, Skill2Type);
-
-                    if (_skill2NoCoolClick == true)
-                    {
-                        _useSkill2 = false;
-                    }
-                    else
-                    {
-                        //# 스킬 쿨타임 초기화
-                        _timeSinceLastSkill2 = 0.0001f;
-                    }
-                }
-            }
-
-            //# 3번 스킬
-            if ((_skill3Lock == false) && _useSkill3 && IsNormalState)
-            {
-                if ((_skill3Channeling == false) && _timeSinceLastSkill3 < 0f && mainTarget.distance <= GetCurrentSkill3Distance())
-                {
-                    SetAttackAnim();
-
-                    if (IsSkill3Channeling)
-                    {
-                        //# 애니메이션 시전 시간동안 채널링
-                        _skill3Channeling = true;
-                        //# 일단 모든 스킬은 공격 애니메이션으로 통일하지만 추후 활용시 유닛정보에 애니메이션 정보 담아서 활용 가능
-                        float skillAnimTime = GetSkillAnimTime(DefEnum.EAnim.Attack);
-                        if (await Util.Delay(skillAnimTime, _cancleTokenSource) == false)
-                            return;
-
-                        _skill3Channeling = false;
-                    }
-
-                    CHMSkill.Instance.CreateSkill(new DefClass.SkillLocationInfo
-                    {
-                        trCaster = transform,
-                        posCaster = posMy,
-                        dirCaster = dirMy,
-                        trTarget = mainTarget.target.transform,
-                        posTarget = posMainTarget,
-                        dirTarget = posMainTarget - posMy,
-                        posSkill = posMainTarget,
-                        dirSkill = posMainTarget - posMy,
-                    }, Skill3Type);
-
-                    if (_skill3NoCoolClick == true)
-                    {
-                        _useSkill3 = false;
-                    }
-                    else
-                    {
-                        //# 스킬 쿨타임 초기화
-                        _timeSinceLastSkill3 = 0.0001f;
-                    }
-                }
-            }
-
-            //# 4번 스킬
-            if ((_skill4Lock == false) && _useSkill4 && IsNormalState)
-            {
-                if ((_skill4Channeling == false) && _timeSinceLastSkill4 < 0f && mainTarget.distance <= GetCurrentSkill4Distance())
-                {
-                    SetAttackAnim();
-
-                    if (IsSkill4Channeling)
-                    {
-                        //# 애니메이션 시전 시간동안 채널링
-                        _skill4Channeling = true;
-                        //# 일단 모든 스킬은 공격 애니메이션으로 통일하지만 추후 활용시 유닛정보에 애니메이션 정보 담아서 활용 가능
-                        float skillAnimTime = GetSkillAnimTime(DefEnum.EAnim.Attack);
-                        if (await Util.Delay(skillAnimTime, _cancleTokenSource) == false)
-                            return;
-
-                        _skill4Channeling = false;
-                    }
-
-                    CHMSkill.Instance.CreateSkill(new DefClass.SkillLocationInfo
-                    {
-                        trCaster = transform,
-                        posCaster = posMy,
-                        dirCaster = dirMy,
-                        trTarget = mainTarget.target.transform,
-                        posTarget = posMainTarget,
-                        dirTarget = posMainTarget - posMy,
-                        posSkill = posMainTarget,
-                        dirSkill = posMainTarget - posMy,
-                    }, Skill4Type);
-
-                    if (_skill4NoCoolClick == true)
-                    {
-                        _useSkill4 = false;
-                    }
-                    else
-                    {
-                        //# 스킬 쿨타임 초기화
-                        _timeSinceLastSkill4 = 0.0001f;
-                    }
-                }
-            }
         }
     }
 }
