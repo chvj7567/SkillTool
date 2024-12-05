@@ -2705,7 +2705,6 @@ GameObject:
   - component: {fileID: 2836004473841745626}
   - component: {fileID: 75704831234924894}
   - component: {fileID: -4243366789024471390}
-  - component: {fileID: 7728250604078137603}
   - component: {fileID: 3834797451396584039}
   - component: {fileID: 6750550168411243048}
   m_Layer: 0
@@ -2796,70 +2795,42 @@ MonoBehaviour:
   _agent: {fileID: 75704831234924894}
   _animator: {fileID: 2836004473841745626}
   _unitCollider: {fileID: 3834797451396584039}
-  _targetTracker: {fileID: 7728250604078137603}
+  _targetTracker:
+    _standardAxis: 3
+    _targetMask:
+      serializedVersion: 2
+      m_Bits: 0
+    _ignoreMask:
+      serializedVersion: 2
+      m_Bits: 4
+    _range: 0
+    _rangeMulti: 2
+    _rangeMultiTime: 3
+    _viewAngle: 0
+    _orgRangeMulti: -1
+    _orgViewAngle: -1
+    _skill1Distance: -1
+    _trackerTarget:
+      target: {fileID: 0}
+      distance: -1
   _liAnimName:
   - Idle_Guard_AR
   - Shoot_SingleShot_AR
   - Run_guard_AR
   - Die
+  _skill:
+    _skill1Data: {fileID: 0}
+    _useSkill1: 1
+    _skill1NoCoolClick: 0
+    _skill1Lock: 0
+    _skill1Channeling: 0
+    _timeSinceLastSkill1: -1
   _maxHp: 0
   _maxMp: 0
   _curHp: 0
   _curMp: 0
   _bonusHp: 0
   _bonusMp: 0
-  _useSkill1: 1
-  _useSkill2: 0
-  _useSkill3: 0
-  _useSkill4: 0
-  _skill1NoCoolClick: 0
-  _skill2NoCoolClick: 0
-  _skill3NoCoolClick: 0
-  _skill4NoCoolClick: 0
-  _skill1Lock: 0
-  _skill2Lock: 0
-  _skill3Lock: 0
-  _skill4Lock: 0
-  _skill1Channeling: 0
-  _skill2Channeling: 0
-  _skill3Channeling: 0
-  _skill4Channeling: 0
-  _timeSinceLastSkill1: -1
-  _timeSinceLastSkill2: -1
-  _timeSinceLastSkill3: -1
-  _timeSinceLastSkill4: -1
---- !u!114 &7728250604078137603
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2836004475591695743}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6f75748585518141a8f76a826b9ecc3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _standardAxis: 3
-  _targetMask:
-    serializedVersion: 2
-    m_Bits: 0
-  _ignoreMask:
-    serializedVersion: 2
-    m_Bits: 0
-  _range: 0
-  _rangeMulti: 2
-  _rangeMultiTime: 3
-  _viewAngle: 0
-  _viewEditor: 0
-  _orgRangeMulti: -1
-  _orgViewAngle: -1
-  _skill1Distance: -1
-  _isExpensionRange: 0
-  _trackerTarget:
-    target: {fileID: 0}
-    distance: -1
-  _unit: {fileID: -4243366789024471390}
 --- !u!136 &3834797451396584039
 CapsuleCollider:
   m_ObjectHideFlags: 0

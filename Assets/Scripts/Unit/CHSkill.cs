@@ -72,19 +72,19 @@ public class CHSkill
         else
         {
             Vector3 posMainTarget = mainTarget.target.transform.position;
-            Vector3 posMy = _unitInfo.UnitTransform.position;
+            Vector3 posMy = _unitInfo.transform.position;
             Vector3 dirMy = Vector3.zero;
 
             switch (_unitInfo.StandardAxis)
             {
                 case DefEnum.EStandardAxis.X:
                     {
-                        dirMy = _unitInfo.UnitTransform.right;
+                        dirMy = _unitInfo.transform.right;
                     }
                     break;
                 case DefEnum.EStandardAxis.Z:
                     {
-                        dirMy = _unitInfo.UnitTransform.forward;
+                        dirMy = _unitInfo.transform.forward;
                     }
                     break;
             }
@@ -114,7 +114,7 @@ public class CHSkill
 
                     CHMSkill.Instance.CreateSkill(new DefClass.SkillLocationInfo
                     {
-                        trCaster = _unitInfo.UnitTransform,
+                        trCaster = _unitInfo.transform,
                         posCaster = posMy,
                         dirCaster = dirMy,
                         trTarget = mainTarget.target.transform,

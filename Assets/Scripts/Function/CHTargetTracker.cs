@@ -1,21 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using UniRx;
-using UniRx.Triggers;
 using UnityEngine;
+using static DefEnum;
 
-public class CHTargetTracker : MonoBehaviour
+[Serializable]
+public class CHTargetTracker
 {
     [Header("타겟 감지 설정")]
     [SerializeField] DefEnum.EStandardAxis _standardAxis; // 정면 기준이 될 축
     [SerializeField] LayerMask _targetMask; // 타겟이 될 레이어
     [SerializeField] LayerMask _ignoreMask; // 무시할 레이어
-    [SerializeField] float _range; // 타겟을 감지할 범위
-    [SerializeField] float _rangeMulti = 2; // 타겟을 감지 후 늘어나는 시야 배수
-    [SerializeField] float _rangeMultiTime = 3; // 타겟을 감지 후 시야가 늘어나는 시간(초)
-    [SerializeField, Range(0, 360)] float _viewAngle; // 타겟을 감지할 시야각
-    [SerializeField] bool _viewEditor; // 에디터 상에서 시야각 확인 여부
+    [SerializeField, ReadOnly] float _range; // 타겟을 감지할 범위
+    [SerializeField, ReadOnly] float _rangeMulti = 2; // 타겟을 감지 후 늘어나는 시야 배수
+    [SerializeField, ReadOnly] float _rangeMultiTime = 3; // 타겟을 감지 후 시야가 늘어나는 시간(초)
+    [SerializeField, ReadOnly, Range(0, 360)] float _viewAngle; // 타겟을 감지할 시야각
 
     [Header("원본 값")]
     [SerializeField, ReadOnly] float _orgRangeMulti = -1f;
@@ -24,27 +22,120 @@ public class CHTargetTracker : MonoBehaviour
     [Header("스킬 사정거리")]
     [SerializeField, ReadOnly] float _skill1Distance = -1f;
 
-    [Header("시야 확장 여부")]
-    [SerializeField, ReadOnly] bool _isExpensionRange = false;
-
     [Header("근접 타겟")]
     [SerializeField, ReadOnly] DefClass.TargetInfo _trackerTarget = new DefClass.TargetInfo();
 
-    [Header("유닛")]
-    [SerializeField] CHUnit _unit;
+    IUnitInfo _unitInfo;
+    IUnitAnim _unitAnim;
 
-    #region Setter
-    public void SetTargetMask(int layer)
+    public void Init(IUnitInfo unitInfo, IUnitAnim unitAnim)
     {
-        _targetMask = layer;
+        _unitInfo = unitInfo;
+        _unitAnim = unitAnim;
+
+        _range = _unitInfo.GetCurrentRange();
+        _rangeMulti = _unitInfo.GetCurrentRangeMulti();
+        _orgRangeMulti = _rangeMulti;
+        _rangeMulti = 1f;
+        _viewAngle = _unitInfo.GetCurrentViewAngle();
+        _orgViewAngle = _viewAngle;
+        _skill1Distance = _unitInfo.GetCurrentSkill1Distance();
     }
-    #endregion
+
+    public void OnUpdate()
+    {
+        //# 죽었으면 타겟 감지 X
+        if (_unitInfo.IsDie)
+            return;
+
+        //# 감지된 타겟, 추적 중인 타겟이 모두 없는 경우
+        if (_trackerTarget.target == null)
+        {
+            //# 시야 범위 안에 들어온 타겟 중 제일 가까운 타겟 감지
+            switch (_standardAxis)
+            {
+                case DefEnum.EStandardAxis.X:
+                    {
+                        _trackerTarget = GetClosestTargetInfo(_unitInfo.transform.position, _unitInfo.transform.right, _targetMask, _range * _rangeMulti, _viewAngle);
+                    }
+                    break;
+                case DefEnum.EStandardAxis.Z:
+                    {
+                        _trackerTarget = GetClosestTargetInfo(_unitInfo.transform.position, _unitInfo.transform.forward, _targetMask, _range * _rangeMulti, _viewAngle);
+                    }
+                    break;
+            }
+
+            _unitAnim.StopRunAnim();
+        }
+        //# 감지된 타겟이 있거나 추적 중인 타겟이 있는 경우
+        else
+        {
+            if (_trackerTarget.target.IsDie)
+            {
+                _trackerTarget.target = null;
+            }
+            else
+            {
+                //# 현재 타겟과의 거리 갱신
+                _trackerTarget.distance = Vector3.Distance(_unitInfo.transform.position, _trackerTarget.target.transform.position);
+
+                //# 스킬 사정거리 내에 있으면 멈추도록 설정
+                _unitInfo.SetAgentStoppingDistance(_skill1Distance);
+
+                //# 공격 가능한 상태이면(CC 등 안 걸려있는 상태인지)
+                if (_unitInfo.IsNormal)
+                {
+                    //# 스킬 사정거리 밖에 있는 경우
+                    if (_trackerTarget.distance > _skill1Distance)
+                    {
+                        //# 네비메쉬 지형이라면
+                        if (_unitInfo.IsOnNavMesh)
+                        {
+                            //# 타겟 위치를 갱신하여 쫒아감
+                            _unitAnim.SetDestination(_trackerTarget.target.transform.position);
+                        }
+
+                        _unitAnim.LookAtPosition(_trackerTarget.target.transform.position);
+                        _unitAnim.PlayRunAnim();
+                    }
+                    //# 스킬 사정거리 안에 있는 경우
+                    else
+                    {
+                        _unitAnim.LookAtPosition(_trackerTarget.target.transform.position);
+                        _unitAnim.StopRunAnim();
+                    }
+                }
+            }
+
+        }
+    }
+
+    public void OnDrawGizmos()
+    {
+        if (_unitInfo == null || _unitInfo.IsDie)
+            return;
+
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(_unitInfo.transform.position, _range * _rangeMulti);
+
+        //# 시야각의 경계선4
+        Vector3 left = _unitInfo.transform.Angle(-_viewAngle * 0.5f, _standardAxis);
+        Vector3 right = _unitInfo.transform.Angle(_viewAngle * 0.5f, _standardAxis);
+
+        Debug.DrawRay(_unitInfo.transform.position, left * _range, Color.green);
+        Debug.DrawRay(_unitInfo.transform.position, right * _range, Color.green);
+    }
 
     #region Getter
     public DefEnum.EStandardAxis StandardAxis => _standardAxis;
     public LayerMask TargetMask => _targetMask;
+    public LayerMask IgnoreMask => _ignoreMask;
 
-    public bool IsExpensionRange => _isExpensionRange;
+    public void SetTargetMask(LayerMask layer)
+    {
+        _targetMask = 1 << layer;
+    }
 
     public DefClass.TargetInfo GetClosestTargetInfo()
     {
@@ -112,137 +203,4 @@ public class CHTargetTracker : MonoBehaviour
         return closestTargetInfo;
     }
     #endregion
-
-    private void Start()
-    {
-        _unit.StandardAxis = _standardAxis;
-
-        //# 프레임 단위로 타겟 감지
-        gameObject.UpdateAsObservable().Subscribe(_ =>
-        {
-            //# 비활성화 되어있으면 타겟 감지 X
-            if (gameObject.activeSelf == false)
-                return;
-
-            //# 죽었으면 타겟 감지 X
-            if (_unit.IsDie)
-                return;
-
-            //# 감지된 타겟, 추적 중인 타겟이 모두 없는 경우
-            if (_trackerTarget.target == null)
-            {
-                //# 시야 범위 안에 들어온 타겟 중 제일 가까운 타겟 감지
-                switch (_standardAxis)
-                {
-                    case DefEnum.EStandardAxis.X:
-                        {
-                            _trackerTarget = GetClosestTargetInfo(transform.position, transform.right, _targetMask, _range * _rangeMulti, _viewAngle);
-                        }
-                        break;
-                    case DefEnum.EStandardAxis.Z:
-                        {
-                            _trackerTarget = GetClosestTargetInfo(transform.position, transform.forward, _targetMask, _range * _rangeMulti, _viewAngle);
-                        }
-                        break;
-                }
-
-                SetExpensionRange(false);
-                _unit.StopRunAnim();
-            }
-            //# 감지된 타겟이 있거나 추적 중인 타겟이 있는 경우
-            else
-            {
-                if (_trackerTarget.target.IsDie)
-                {
-                    _trackerTarget.target = null;
-                }
-                else
-                {
-                    //# 현재 타겟과의 거리 갱신
-                    _trackerTarget.distance = Vector3.Distance(transform.position, _trackerTarget.target.transform.position);
-
-                    SetExpensionRange(true);
-
-                    //# 스킬 사정거리 내에 있으면 멈추도록 설정
-                    _unit.SetAgentStoppingDistance(_skill1Distance);
-
-                    //# 공격 가능한 상태이면(CC 등 안 걸려있는 상태인지)
-                    if (_unit.IsNormal)
-                    {
-                        //# 스킬 사정거리 밖에 있는 경우
-                        if (_trackerTarget.distance > _skill1Distance)
-                        {
-                            //# 네비메쉬 지형이라면
-                            if (_unit.IsOnNavMesh)
-                            {
-                                //# 타겟 위치를 갱신하여 쫒아감
-                                _unit.SetDestination(_trackerTarget.target.transform.position);
-                            }
-
-                            _unit.LookAtPosition(_trackerTarget.target.transform.position);
-                            _unit.PlayRunAnim();
-                        }
-                        //# 스킬 사정거리 안에 있는 경우
-                        else
-                        {
-                            _unit.LookAtPosition(_trackerTarget.target.transform.position);
-                            _unit.StopRunAnim();
-                        }
-                    }
-                }
-                
-            }
-        }).AddTo(this);
-    }
-
-    void OnDrawGizmos()
-    {
-        if (_viewEditor && _unit.IsDie == false)
-        {
-            Gizmos.color = Color.blue;
-            Gizmos.DrawWireSphere(transform.position, _range * _rangeMulti);
-
-            //# 시야각의 경계선4
-            Vector3 left = transform.Angle(-_viewAngle * 0.5f, _standardAxis);
-            Vector3 right = transform.Angle(_viewAngle * 0.5f, _standardAxis);
-
-            Debug.DrawRay(transform.position, left * _range, Color.green);
-            Debug.DrawRay(transform.position, right * _range, Color.green);
-        }
-    }
-
-    public void SetValue(CHUnit unit)
-    {
-        if (unit == null)
-            return;
-
-        _range = unit.GetCurrentRange();
-        _rangeMulti = unit.GetCurrentRangeMulti();
-        _orgRangeMulti = _rangeMulti;
-        _rangeMulti = 1f;
-        _viewAngle = unit.GetCurrentViewAngle();
-        _orgViewAngle = _viewAngle;
-        _skill1Distance = unit.GetCurrentSkill1Distance();
-
-        _unit.SetAgentSpeed(unit.GetCurrentMoveSpeed());
-        _unit.SetAgentAngularSpeed(unit.GetCurrentRotateSpeed());
-    }
-
-    public async void SetExpensionRange(bool active)
-    {
-        if (active)
-        {
-            _isExpensionRange = true;
-            _viewAngle = 360f;
-            _rangeMulti = _orgRangeMulti;
-        }
-        else
-        {
-            await Task.Delay((int)(_rangeMultiTime * 1000));
-
-            _isExpensionRange = false;
-            _viewAngle = _orgViewAngle;
-            _rangeMulti = 1f;
-        }
-    }
 }

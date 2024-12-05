@@ -8,7 +8,7 @@ public class CHMUnit : CHSingleton<CHMUnit>
 {
     Dictionary<EUnit, UnitData> _dicUnitData = new Dictionary<EUnit, UnitData>();
     List<Material> _liMaterial = new List<Material>();
-    List<GameObject> _liUnit = new List<GameObject>();
+    List<CHUnit> _liUnit = new List<CHUnit>();
     GameObject _originGaugeBar = null;
     GameObject _originDamageText = null;
 
@@ -66,24 +66,14 @@ public class CHMUnit : CHSingleton<CHMUnit>
     #endregion
 
     #region Setter
-    public void SetUnit(GameObject unit, DefEnum.EUnit eUnit)
+    public void SetUnit(CHUnit unit, DefEnum.EUnit eUnit)
     {
-        if (unit == null)
-            return;
-
-        CHUnit unitBase = unit.GetComponent<CHUnit>();
-        if (unitBase != null)
-        {
-            unitBase.UnitType = eUnit;
-            SetColor(unit, eUnit);
-        }
+        unit.UnitType = eUnit;
+        SetColor(unit, eUnit);
     }
 
-    public void SetColor(GameObject unit, DefEnum.EUnit eUnit)
+    public void SetColor(CHUnit unit, DefEnum.EUnit eUnit)
     {
-        if (unit == null)
-            return;
-
         int index = (int)eUnit;
         var arrMesh = unit.GetComponentsInChildren<SkinnedMeshRenderer>();
         if (arrMesh != null && index < _liMaterial.Count)
@@ -95,24 +85,14 @@ public class CHMUnit : CHSingleton<CHMUnit>
         }
     }
 
-    public void SetLayer(GameObject unit, DefEnum.ELayer eLayer)
+    public void SetLayer(CHUnit unit, DefEnum.ELayer eLayer)
     {
-        if (unit == null)
-            return;
-
-        unit.layer = (int)eLayer;
+        unit.Layer = (int)eLayer;
     }
 
-    public void SetTargetMask(GameObject unit, DefEnum.ELayer eLayer)
+    public void SetTargetMask(CHUnit unit, DefEnum.ELayer eLayer)
     {
-        if (unit == null)
-            return;
-
-        CHTargetTracker targetTracker = unit.GetComponent<CHTargetTracker>();
-        if (targetTracker != null)
-        {
-            targetTracker.SetTargetMask(1 << (int)eLayer);
-        }
+        unit.TargetMask = (int)eLayer;
     }
     #endregion
 
@@ -147,30 +127,32 @@ public class CHMUnit : CHSingleton<CHMUnit>
     }
     #endregion
 
-    public void CreateUnit(Transform parent, DefEnum.EUnit eUnit, DefEnum.ELayer eTeamLayer, DefEnum.ELayer eTargetLayer, Vector3 position, List<CHTargetTracker> liTargetTracker = null, List<LayerMask> liTargetMask = null, bool onHpBar = true, bool onMpBar = false, bool onCoolTimeBar = false)
+    public void CreateUnit(Transform parent, DefEnum.EUnit eUnit, DefEnum.ELayer eTeamLayer, DefEnum.ELayer eTargetLayer, Vector3 position,
+        bool onHpBar = true, bool onMpBar = false, bool onCoolTimeBar = false)
     {
-        CHMResource.Instance.InstantiateRobot(eUnit, (ball) =>
+        CHMResource.Instance.InstantiateRobot(eUnit, (obj) =>
         {
-            if (ball == null)
+            CHUnit unit = obj?.GetComponent<CHUnit>();
+            if (unit == null)
                 return;
 
-            ball.transform.SetParent(parent);
+            unit.transform.SetParent(parent);
 
-            _liUnit.Add(ball);
+            _liUnit.Add(unit);
             if (eTargetLayer == DefEnum.ELayer.Red)
             {
-                ball.name = $"{eUnit}Unit(My) {RedIndex++}";
+                unit.name = $"{eUnit}Unit(My) {RedIndex++}";
             }
             else
             {
-                ball.name = $"{eUnit}Unit(Enemy) {BlueIndex++}";
+                unit.name = $"{eUnit}Unit(Enemy) {BlueIndex++}";
             }
 
-            SetUnit(ball, eUnit);
-            SetLayer(ball, eTeamLayer);
-            SetTargetMask(ball, eTargetLayer);
+            SetUnit(unit, eUnit);
+            SetLayer(unit, eTeamLayer);
+            SetTargetMask(unit, eTargetLayer);
 
-            var unitBase = ball.GetComponent<CHUnit>();
+            var unitBase = unit.GetComponent<CHUnit>();
             if (unitBase != null)
             {
                 unitBase.ShowHp = onHpBar;
@@ -178,16 +160,9 @@ public class CHMUnit : CHSingleton<CHMUnit>
                 unitBase.ShowCoolTime = onCoolTimeBar;
             }
 
-            ball.transform.position = position;
+            unit.transform.position = position;
 
-            var targetTracker = ball.GetComponent<CHTargetTracker>();
-            if (targetTracker != null)
-            {
-                if (liTargetTracker != null)
-                    liTargetTracker.Add(targetTracker);
-                if (liTargetMask != null)
-                    liTargetMask.Add(targetTracker.TargetMask);
-            }
+            unit.Init();
         });
     }
 
@@ -195,7 +170,7 @@ public class CHMUnit : CHSingleton<CHMUnit>
     {
         foreach (var unit in _liUnit)
         {
-            CHMResource.Instance.Destroy(unit);
+            CHMResource.Instance.Destroy(unit.transform.gameObject);
         }
 
         _liUnit.Clear();

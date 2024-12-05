@@ -18,9 +18,31 @@ public interface IUnitInfo
     public bool IsNormal { get; }
     public bool IsDie { get; }
     public bool IsAirborne { get; }
+    public bool IsOnNavMesh { get; }
+    public int Layer { get; }
 
-    public Transform UnitTransform { get; }
+    public Transform transform { get; }
     public DefClass.TargetInfo Target { get; }
+
+    public void SetAgentSpeed(float speed);
+    public void SetAgentStoppingDistance(float distance);
+    public void SetAgentAngularSpeed(float angularSpeed);
+
+    public float GetCurrentMaxHp();
+    public float GetCurrentHpRegenPerSecond();
+    public float GetCurrentMaxMp();
+    public float GetCurrentMpRegenPerSecond();
+    public float GetCurrentAttackPower();
+    public float GetCurrentDefensePower();
+    public float GetCurrentMoveSpeed();
+    public float GetCurrentRotateSpeed();
+    public float GetCurrentRange();
+    public float GetCurrentRangeMulti();
+    public float GetCurrentViewAngle();
+    public float GetCurrentHp();
+    public float GetCurrentMp();
+    public float GetPlusDamage();
+    public float GetCurrentSkill1Distance();
 }
 
 public interface IUnitGauge
@@ -32,21 +54,20 @@ public interface IUnitGauge
 
 public interface IUnitAnim
 {
+    public void LookAtPosition(Vector3 destPos);
+    public void SetDestination(Vector3 destPos);
     public void SetAttackAnim();
     public void SetSightAnim(bool sight);
     public float GetSkillAnimTime(DefEnum.EAnim eAnim);
+    public void PlayRunAnim();
+    public void StopRunAnim();
+    public bool IsRunAnimPlaying();
 }
 
 public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 {
     #region Parameter
-    [SerializeField] NavMeshAgent _agent;
-    [SerializeField] Animator _animator;
-    [SerializeField] Collider _unitCollider;
-    [SerializeField] CHTargetTracker _targetTracker;
-    [SerializeField] List<string> _liAnimName = new List<string>();
-    [SerializeField, ReadOnly] CHSkill _skill;
-    [SerializeField, ReadOnly] Dictionary<string, float> _dicAnimTime = new Dictionary<string, float>();
+    [Header("캐릭터 HP/MP 상태")]
     [SerializeField, ReadOnly] float _maxHp;
     [SerializeField, ReadOnly] float _maxMp;
     [SerializeField, ReadOnly] float _curHp;
@@ -54,6 +75,13 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     [SerializeField, ReadOnly] float _bonusHp;
     [SerializeField, ReadOnly] float _bonusMp;
 
+    [SerializeField] NavMeshAgent _agent;
+    [SerializeField] Animator _animator;
+    [SerializeField] Collider _unitCollider;
+    [SerializeField] List<string> _liAnimName = new List<string>();
+    [SerializeField] CHTargetTracker _targetTracker = new CHTargetTracker();
+    [SerializeField] CHSkill _skill;
+    
     CHGaugeBar _gaugeBarHP;
     CHGaugeBar _gaugeBarMP;
     CHGaugeBar _gaugeBarCT;
@@ -61,31 +89,62 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     UnitData _unitData;
     LevelData _levelData;
 
+    Dictionary<string, float> _dicAnimTime = new Dictionary<string, float>();
     CancellationTokenSource _cancleTokenSource;
     Sequence _seqAirborn;
     IDisposable _disposePerSecond;
+
+    bool _initialize = false;
     #endregion
 
     #region Property
-    public DefEnum.EStandardAxis StandardAxis { get; set; }
+    public DefEnum.EStandardAxis StandardAxis
+    {
+        get
+        {
+            return _targetTracker.StandardAxis;
+        }
+    }
+
+    public LayerMask TargetMask
+    {
+        get
+        {
+            return _targetTracker.TargetMask;
+        }
+        set
+        {
+            _targetTracker.SetTargetMask(value);
+        }
+    }
+
+    public LayerMask IgnoreMask
+    {
+        get
+        {
+            return _targetTracker.IgnoreMask;
+        }
+    }
+
     public DefEnum.EUnit UnitType { get; set; }
     public bool ShowHp { get; set; }
     public bool ShowMp { get; set; }
     public bool ShowCoolTime { get; set; }
     public DefEnum.EUnitState MyUnitState { get; private set; }
-    public Transform UnitTransform => transform;
-    public DefClass.TargetInfo Target => _targetTracker.GetClosestTargetInfo();
-    public bool IsNormal => MyUnitState == 0;
-    public bool IsDie => (MyUnitState & DefEnum.EUnitState.IsDie) != 0;
-    public bool IsAirborne => (MyUnitState & DefEnum.EUnitState.IsAirborne) != 0;
+    public int Layer
+    {
+        get
+        {
+            return gameObject.layer;
+        }
+        set
+        {
+            gameObject.layer = value;
+        }
+    }
     #endregion
 
-    void OnEnable()
-    {
-        Init();
-    }
-
-    void OnDisable()
+    private void OnDisable()
     {
         if (_seqAirborn != null && _seqAirborn.IsComplete() == false)
         {
@@ -94,21 +153,13 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 
         _seqAirborn = null;
         _disposePerSecond.Dispose();
-    }
-
-    void Awake()
-    {
-        _cancleTokenSource = new CancellationTokenSource();
-    }
-
-    private void Start()
-    {
-        Init();
+        _initialize = false;
     }
 
     private void Update()
     {
         _skill.OnUpdate();
+        _targetTracker.OnUpdate();
     }
 
     private void OnDestroy()
@@ -119,11 +170,20 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
         }
     }
 
-    #region Initialize
-    void Init()
+    private void OnDrawGizmos()
     {
+        _targetTracker.OnDrawGizmos();
+    }
+
+    #region Initialize
+    public void Init()
+    {
+        if (_initialize)
+            return;
+
+        _initialize = true;
+        _cancleTokenSource = new CancellationTokenSource();
         InitUnitData();
-        _targetTracker.SetValue(this);
         InitGaugeBar(ShowHp, ShowMp, ShowCoolTime);
 
         _disposePerSecond = gameObject.UpdateAsObservable()
@@ -169,14 +229,18 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
         }
         else
         {
+            SetAgentSpeed(GetCurrentMoveSpeed());
+            SetAgentAngularSpeed(GetCurrentRotateSpeed());
+
             _maxHp += _unitData.maxHp;
             _maxMp += _unitData.maxMp;
             _curHp += _unitData.maxHp;
             _curMp += _unitData.maxMp;
 
-            CHMUnit.Instance.SetUnit(gameObject, UnitType);
+            CHMUnit.Instance.SetUnit(this, UnitType);
 
             _skill.Init(_cancleTokenSource, this, this, this);
+            _targetTracker.Init(this, this);
 
             _levelData = CHMLevel.Instance.GetLevelData(UnitType, _unitData.eLevel);
 
@@ -199,7 +263,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                 if (gaugeBar)
                 {
                     gaugeBar.name = "HpBar";
-                    gaugeBar.transform.SetParent(transform);
+                    gaugeBar.transform.SetParent(base.transform);
 
                     _gaugeBarHP = gaugeBar.GetComponent<CHGaugeBar>();
                     if (_gaugeBarHP)
@@ -209,7 +273,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                             _unitCollider = gameObject.GetOrAddComponent<Collider>();
                         }
 
-                        _gaugeBarHP.Init(this, _unitCollider.bounds.size.y / 2f / transform.localScale.x, 2.3f);
+                        _gaugeBarHP.Init(this, _unitCollider.bounds.size.y / 2f / base.transform.localScale.x, 2.3f);
                         _gaugeBarHP.SetGaugeBar(1, 1, 0);
                     }
                 }
@@ -228,7 +292,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                 if (gaugeBar)
                 {
                     gaugeBar.name = "MpBar";
-                    gaugeBar.transform.SetParent(transform);
+                    gaugeBar.transform.SetParent(base.transform);
 
                     _gaugeBarMP = gaugeBar.GetComponent<CHGaugeBar>();
                     if (_gaugeBarMP)
@@ -238,7 +302,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                             _unitCollider = gameObject.GetOrAddComponent<Collider>();
                         }
 
-                        _gaugeBarMP.Init(this, _unitCollider.bounds.size.y / 2f / transform.localScale.x, 1.7f);
+                        _gaugeBarMP.Init(this, _unitCollider.bounds.size.y / 2f / base.transform.localScale.x, 1.7f);
                         _gaugeBarMP.SetGaugeBar(1, 1, 0f);
                     }
                 }
@@ -257,7 +321,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                 if (gaugeBar)
                 {
                     gaugeBar.name = "CoolTimeBar";
-                    gaugeBar.transform.SetParent(transform);
+                    gaugeBar.transform.SetParent(base.transform);
 
                     _gaugeBarCT = gaugeBar.GetComponent<CHGaugeBar>();
                     if (_gaugeBarCT)
@@ -267,7 +331,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                             _unitCollider = gameObject.GetOrAddComponent<Collider>();
                         }
 
-                        _gaugeBarCT.Init(this, _unitCollider.bounds.size.y / 2f / transform.localScale.x, -2f);
+                        _gaugeBarCT.Init(this, _unitCollider.bounds.size.y / 2f / base.transform.localScale.x, -2f);
                         _gaugeBarCT.SetGaugeBar(1, 1, 0f);
                     }
                 }
@@ -282,6 +346,10 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     #endregion
 
     #region Getter
+    public DefClass.TargetInfo Target => _targetTracker.GetClosestTargetInfo();
+    public bool IsNormal => MyUnitState == 0;
+    public bool IsDie => (MyUnitState & DefEnum.EUnitState.IsDie) != 0;
+    public bool IsAirborne => (MyUnitState & DefEnum.EUnitState.IsAirborne) != 0;
     public bool IsOnNavMesh => _agent.isOnNavMesh;
 
     public DefEnum.ESkill Skill1Type => _unitData.eSkill1;
@@ -544,12 +612,6 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         if (IsDie == false)
         {
-            var targetTracker = GetComponent<CHTargetTracker>();
-            if (targetTracker != null && targetTracker.GetClosestTargetInfo() != null && targetTracker.GetClosestTargetInfo().target != null)
-            {
-                targetTracker.SetExpensionRange(true);
-            }
-
             switch (eDamageType1)
             {
                 case DefEnum.EDamageType1.AtOnce:
