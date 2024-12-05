@@ -67,7 +67,8 @@ public interface IUnitAnim
 public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 {
     #region Parameter
-    [Header("캐릭터 HP/MP 상태")]
+    [Header("캐릭터 정보")]
+    [SerializeField, ReadOnly] int _unitID;
     [SerializeField, ReadOnly] float _maxHp;
     [SerializeField, ReadOnly] float _maxMp;
     [SerializeField, ReadOnly] float _curHp;
@@ -176,13 +177,15 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     }
 
     #region Initialize
-    public void Init()
+    public void Init(int unitID)
     {
         if (_initialize)
             return;
 
         _initialize = true;
         _cancleTokenSource = new CancellationTokenSource();
+
+        _unitID = unitID;
         InitUnitData();
         InitGaugeBar(ShowHp, ShowMp, ShowCoolTime);
 

@@ -6,15 +6,12 @@ using static DefEnum;
 
 public class CHMUnit : CHSingleton<CHMUnit>
 {
+    int curUnitID = 0;
     Dictionary<EUnit, UnitData> _dicUnitData = new Dictionary<EUnit, UnitData>();
     List<Material> _liMaterial = new List<Material>();
-    List<CHUnit> _liUnit = new List<CHUnit>();
+    Dictionary<int, CHUnit> _dicUnit = new Dictionary<int, CHUnit>();
     GameObject _originGaugeBar = null;
     GameObject _originDamageText = null;
-
-    public int RedIndex { get; private set; }
-
-    public int BlueIndex { get; private set; }
 
     #region Initialize
     public bool Initialize => _initialize;
@@ -138,14 +135,14 @@ public class CHMUnit : CHSingleton<CHMUnit>
 
             unit.transform.SetParent(parent);
 
-            _liUnit.Add(unit);
+            _dicUnit.Add(++curUnitID, unit);
             if (eTargetLayer == DefEnum.ELayer.Red)
             {
-                unit.name = $"{eUnit}Unit(My) {RedIndex++}";
+                unit.name = $"{eUnit} Unit {curUnitID}(Red)";
             }
             else
             {
-                unit.name = $"{eUnit}Unit(Enemy) {BlueIndex++}";
+                unit.name = $"{eUnit} Unit {curUnitID}(Blue)";
             }
 
             SetUnit(unit, eUnit);
@@ -162,17 +159,17 @@ public class CHMUnit : CHSingleton<CHMUnit>
 
             unit.transform.position = position;
 
-            unit.Init();
+            unit.Init(curUnitID);
         });
     }
 
     public void RemoveUnitAll()
     {
-        foreach (var unit in _liUnit)
+        foreach (var unit in _dicUnit)
         {
-            CHMResource.Instance.Destroy(unit.transform.gameObject);
+            CHMResource.Instance.Destroy(unit.Value.transform.gameObject);
         }
 
-        _liUnit.Clear();
+        _dicUnit.Clear();
     }
 }
