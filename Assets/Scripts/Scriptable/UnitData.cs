@@ -21,12 +21,6 @@ public class UnitData : ScriptableObject
 
     [Header("스킬 정보")]
     [Tooltip("스킬1 이름"), HideInInspector] public DefEnum.ESkill eSkill1 = DefEnum.ESkill.None;
-    [Tooltip("스킬2 이름"), HideInInspector] public DefEnum.ESkill eSkill2 = DefEnum.ESkill.None;
-    [Tooltip("스킬3 이름"), HideInInspector] public DefEnum.ESkill eSkill3 = DefEnum.ESkill.None;
-    [Tooltip("스킬4 이름"), HideInInspector] public DefEnum.ESkill eSkill4 = DefEnum.ESkill.None;
-
-    [Header("아이템 정보")]
-    [Tooltip("아이템1 이름"), HideInInspector] public DefEnum.EItem eItem1 = DefEnum.EItem.None;
 
     public UnitData Clone()
     {
@@ -46,10 +40,6 @@ public class UnitData : ScriptableObject
         newUnitInfo.rangeMulti = this.rangeMulti;
         newUnitInfo.viewAngle = this.viewAngle;
         newUnitInfo.eSkill1 = this.eSkill1;
-        newUnitInfo.eSkill2 = this.eSkill2;
-        newUnitInfo.eSkill3 = this.eSkill3;
-        newUnitInfo.eSkill4 = this.eSkill4;
-        newUnitInfo.eItem1 = this.eItem1;
 
         return newUnitInfo;
     }

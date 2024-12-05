@@ -18,10 +18,6 @@ public class EditorUnitData : Editor
     private SerializedProperty rangeMultiProperty;
     private SerializedProperty viewAngleProperty;
     private SerializedProperty eSkill1Property;
-    private SerializedProperty eSkill2Property;
-    private SerializedProperty eSkill3Property;
-    private SerializedProperty eSkill4Property;
-    private SerializedProperty eItem1Property;
 
     private void OnEnable()
     {
@@ -41,10 +37,6 @@ public class EditorUnitData : Editor
         rangeMultiProperty = serializedObject.FindProperty("rangeMulti");
         viewAngleProperty = serializedObject.FindProperty("viewAngle");
         eSkill1Property = serializedObject.FindProperty("eSkill1");
-        eSkill2Property = serializedObject.FindProperty("eSkill2");
-        eSkill3Property = serializedObject.FindProperty("eSkill3");
-        eSkill4Property = serializedObject.FindProperty("eSkill4");
-        eItem1Property = serializedObject.FindProperty("eItem1");
     }
 
     public override void OnInspectorGUI()
@@ -75,13 +67,6 @@ public class EditorUnitData : Editor
         // 스킬 정보 표시
         EditorGUILayout.Space(10f);
         EditorGUILayout.PropertyField(eSkill1Property);
-        EditorGUILayout.PropertyField(eSkill2Property);
-        EditorGUILayout.PropertyField(eSkill3Property);
-        EditorGUILayout.PropertyField(eSkill4Property);
-
-        // 아이템 정보 표시
-        EditorGUILayout.Space(10f);
-        EditorGUILayout.PropertyField(eItem1Property);
 
         // 변경 사항 저장
         serializedObject.ApplyModifiedProperties();
