@@ -7,6 +7,7 @@ public class CHSkill
 {
     //# 스킬 정보
     [SerializeField] SkillData _skill1Data;
+
     //# 스킬 사용 여부
     [SerializeField] bool _useSkill1 = true;
 
@@ -110,6 +111,12 @@ public class CHSkill
                             return;
 
                         _skill1Channeling = false;
+
+                        if (_unitInfo == null)
+                            return;
+
+                        if (mainTarget == null || mainTarget.target == null)
+                            return;
                     }
 
                     CHMSkill.Instance.CreateSkill(new DefClass.SkillLocationInfo
