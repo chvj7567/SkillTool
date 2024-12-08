@@ -78,7 +78,9 @@ public class CHTargetTracker
             else
             {
                 //# 현재 타겟과의 거리 갱신
-                _trackerTarget.distance = Vector3.Distance(_unitInfo.transform.position, _trackerTarget.target.transform.position);
+                _trackerTarget.distance = Vector3.Distance(
+                    new Vector3(_unitInfo.transform.position.x , 0, _unitInfo.transform.position.z),
+                    new Vector3(_trackerTarget.target.transform.position.x ,0, _trackerTarget.target.transform.position.z));
 
                 //# 스킬 사정거리 내에 있으면 멈추도록 설정
                 _unitInfo.SetAgentStoppingDistance(_skill1Distance);
