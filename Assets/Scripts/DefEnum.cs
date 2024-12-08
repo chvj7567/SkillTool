@@ -96,6 +96,7 @@ public partial class DefEnum
         Red,
         Pink,
         Green,
+        Max
     }
 
     public enum ELevel

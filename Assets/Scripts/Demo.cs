@@ -7,18 +7,6 @@ public class Demo : MonoBehaviour
     private void Start()
     {
         Init();
-
-        CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.Green, DefEnum.ELayer.Red, DefEnum.ELayer.Blue, Vector3.zero);
-
-        CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.Yellow, DefEnum.ELayer.Blue, DefEnum.ELayer.Red, new Vector3(20, 0, 20));
-
-        CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.White, DefEnum.ELayer.Red, DefEnum.ELayer.Blue, new Vector3(30, 0, 30));
-
-        //CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.Red, DefEnum.ELayer.Blue, DefEnum.ELayer.Red, new Vector3(10, 0, 10));
-
-        //CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.Pink, DefEnum.ELayer.Red, DefEnum.ELayer.Blue, new Vector3(-20, 0, -20));
-
-        //CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.Brown, DefEnum.ELayer.Blue, DefEnum.ELayer.Red, new Vector3(10, 0, 10));
     }
 
     public void Init()
@@ -30,5 +18,23 @@ public class Demo : MonoBehaviour
         CHMSkill.Instance.Init();
         CHMPool.Instance.Init();
         CHMParticle.Instance.Init();
+    }
+
+    private void OnGUI()
+    {
+        Rect buttonRect = new Rect(10, 10, 100, 30);
+        if (GUI.Button(buttonRect, "Create"))
+        {
+            DefEnum.ELayer myLayer = (DefEnum.ELayer)Random.Range((int)DefEnum.ELayer.Red, (int)DefEnum.ELayer.Blue + 1);
+            DefEnum.ELayer enemyLayer;
+
+            if (myLayer == DefEnum.ELayer.Red)
+                enemyLayer = DefEnum.ELayer.Blue;
+            else
+                enemyLayer= DefEnum.ELayer.Red;
+
+            CHMUnit.Instance.CreateUnit(transform, (DefEnum.EUnit)Random.Range((int)DefEnum.EUnit.None, (int)DefEnum.EUnit.Max), myLayer, enemyLayer,
+                new Vector3(Random.Range(-20f, 20f), 0, Random.Range(-20f, 20f)));
+        }
     }
 }
