@@ -9,8 +9,6 @@ public class CHGaugeBar : MonoBehaviour
     [SerializeField] Image imgBackground;
     [SerializeField] Image imgBackGaugeBar;
     [SerializeField] Image imgGaugeBar;
-
-    [SerializeField, ReadOnly] CHUnit unitBase;
     [SerializeField, ReadOnly] float originPosYText;
 
     private void Update()
@@ -18,9 +16,8 @@ public class CHGaugeBar : MonoBehaviour
         transform.rotation = Camera.main.transform.rotation;
     }
 
-    public void Init(CHUnit unitBase, float posY, float gaugeBarPosY)
+    public void Init(float posY, float gaugeBarPosY)
     {
-        this.unitBase = unitBase;
         canvas.worldCamera = Camera.main;
         transform.localPosition = new Vector3(0f, posY, 0f);
         originPosYText = posY;
@@ -40,7 +37,7 @@ public class CHGaugeBar : MonoBehaviour
         {
             if (viewDamage == true && Mathf.Approximately(damage, 0f) == false)
             {
-                ShowDamageText(damage, .5f);
+                ShowDamageText(damage, 2f);
             }
         }
     }
@@ -65,35 +62,33 @@ public class CHGaugeBar : MonoBehaviour
 
     void ShowDamageText(float damage, float time)
     {
-        var copyTextDamage = CHMResource.Instance.Instantiate(CHMUnit.Instance.GetOriginDamageText(), transform).GetComponent<CHTMPro>();
-        copyTextDamage.gameObject.SetActive(true);
-        copyTextDamage.transform.localPosition = new Vector3(copyTextDamage.transform.localPosition.x, copyTextDamage.transform.position.y + originPosYText);
-        copyTextDamage.SetText(damage);
+        CHTMPro copyText = CHMResource.Instance.Instantiate(CHMUnit.Instance.GetOriginDamageText(), transform).GetComponent<CHTMPro>();
+        RectTransform rectTransform = copyText.GetComponent<RectTransform>();
+
+        float startY = originPosYText + 6f;
+        rectTransform.anchoredPosition = new Vector2(0f, startY);
+
+        copyText.gameObject.SetActive(true);
+        copyText.SetText(damage);
 
         if (damage < 0)
         {
-            copyTextDamage.SetColor(Color.red);
+            copyText.SetColor(Color.red);
         }
         else if (damage > 0)
         {
-            copyTextDamage.SetColor(Color.green);
+            copyText.SetColor(Color.green);
         }
         else
         {
-            copyTextDamage.SetColor(Color.gray);
+            copyText.SetColor(Color.gray);
         }
 
-        copyTextDamage.DOFade(0, time);
+        copyText.DOFade(0, time, () => copyText.SetAlpha(1f));
 
-        var rtTextDamage = copyTextDamage.GetComponent<RectTransform>();
-        if (rtTextDamage)
+        rectTransform.DOAnchorPosY(startY + 3f, time).OnComplete(() =>
         {
-            rtTextDamage.DOAnchorPosY(originPosYText + 6f, time).OnComplete(() =>
-            {
-                copyTextDamage.SetAlpha(1);
-                rtTextDamage.anchoredPosition = new Vector2(rtTextDamage.anchoredPosition.x, originPosYText);
-                CHMResource.Instance.Destroy(copyTextDamage.gameObject);
-            });
-        }
+            CHMResource.Instance.Destroy(copyText.gameObject);
+        });
     }
 }

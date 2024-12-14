@@ -276,7 +276,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                             _unitCollider = gameObject.GetOrAddComponent<Collider>();
                         }
 
-                        _gaugeBarHP.Init(this, _unitCollider.bounds.size.y / 2f / base.transform.localScale.x, 2.3f);
+                        _gaugeBarHP.Init(_unitCollider.bounds.size.y / 2f / base.transform.localScale.x, 2.3f);
                         _gaugeBarHP.SetGaugeBar(1, 1, 0);
                     }
                 }
@@ -305,7 +305,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                             _unitCollider = gameObject.GetOrAddComponent<Collider>();
                         }
 
-                        _gaugeBarMP.Init(this, _unitCollider.bounds.size.y / 2f / base.transform.localScale.x, 1.7f);
+                        _gaugeBarMP.Init(_unitCollider.bounds.size.y / 2f / base.transform.localScale.x, 1.7f);
                         _gaugeBarMP.SetGaugeBar(1, 1, 0f);
                     }
                 }
@@ -334,7 +334,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                             _unitCollider = gameObject.GetOrAddComponent<Collider>();
                         }
 
-                        _gaugeBarCT.Init(this, _unitCollider.bounds.size.y / 2f / base.transform.localScale.x, -2f);
+                        _gaugeBarCT.Init(_unitCollider.bounds.size.y / 2f / base.transform.localScale.x, -2f);
                         _gaugeBarCT.SetGaugeBar(1, 1, 0f);
                     }
                 }

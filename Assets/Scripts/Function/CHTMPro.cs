@@ -73,9 +73,9 @@ public class CHTMPro : MonoBehaviour
         }
     }
 
-    public void DOFade(float value, float time)
+    public void DOFade(float value, float time, Action completeCallback)
     {
-        _text.DOFade(value, time);
+        _text.DOFade(value, time).OnComplete(() => completeCallback.Invoke());
     }
 
     public void SetAlpha(float value)
