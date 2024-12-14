@@ -61,7 +61,7 @@ public interface IUnitAnim
     public float GetSkillAnimTime(DefEnum.EAnim eAnim);
     public void PlayRunAnim();
     public void StopRunAnim();
-    public bool IsRunAnimPlaying();
+    public bool CanMove();
 }
 
 public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
@@ -82,7 +82,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     [SerializeField] List<string> _liAnimName = new List<string>();
     [SerializeField] CHTargetTracker _targetTracker = new CHTargetTracker();
     [SerializeField] CHSkill _skill;
-    
+
     CHGaugeBar _gaugeBarHP;
     CHGaugeBar _gaugeBarMP;
     CHGaugeBar _gaugeBarCT;
@@ -212,7 +212,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                 _dicAnimTime.Add(clip.name, clip.length);
         }
 
-        MyUnitState = 0;
+        MyUnitState = DefEnum.EUnitState.Normal;
         _maxHp = _bonusHp;
         _maxMp = _bonusMp;
         _curHp = _bonusHp;
@@ -350,7 +350,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 
     #region Getter
     public DefClass.TargetInfo Target => _targetTracker.GetClosestTargetInfo();
-    public bool IsNormal => MyUnitState == 0;
+    public bool IsNormal => MyUnitState == DefEnum.EUnitState.Normal;
     public bool IsDie => (MyUnitState & DefEnum.EUnitState.IsDie) != 0;
     public bool IsAirborne => (MyUnitState & DefEnum.EUnitState.IsAirborne) != 0;
     public bool IsOnNavMesh => _agent.isOnNavMesh;
@@ -545,24 +545,16 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
         _agent.angularSpeed = angularSpeed;
     }
 
-    public bool IsRunAnimPlaying()
+    public bool CanMove()
     {
-        if (_animator == null)
-            return true;
+        if (IsNormal == false)
+            return false;
 
         AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+        if (stateInfo.IsName("Shoot_SingleShot_AR"))
+            return false;
 
-        // 애니메이션의 해시 값 비교
-        if (stateInfo.IsName("Run"))
-        {
-            // 애니메이션의 재생 시간 비교
-            if (stateInfo.normalizedTime < 1f)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return true;
     }
 
     public void PlayRunAnim()

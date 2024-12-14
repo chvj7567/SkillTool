@@ -221,7 +221,7 @@ public partial class DefEnum
     {
         Normal = 0,
         IsDie = 1 << 0,
-        IsAirborne = 1 << 1
+        IsAirborne = 1 << 1,
     }
 
     public enum EDecal

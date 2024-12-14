@@ -85,26 +85,25 @@ public class CHTargetTracker
                 //# 스킬 사정거리 내에 있으면 멈추도록 설정
                 _unitInfo.SetAgentStoppingDistance(_skill1Distance);
 
+                _unitAnim.LookAtPosition(_trackerTarget.target.transform.position);
+
                 //# 공격 가능한 상태이면(CC 등 안 걸려있는 상태인지)
                 if (_unitInfo.IsNormal)
                 {
                     //# 스킬 사정거리 밖에 있는 경우
                     if (_trackerTarget.distance > _skill1Distance)
                     {
-                        //# 네비메쉬 지형이라면
-                        if (_unitInfo.IsOnNavMesh)
+                        //# 움직일 수 있다면
+                        if (_unitInfo.IsOnNavMesh && _unitAnim.CanMove())
                         {
                             //# 타겟 위치를 갱신하여 쫒아감
                             _unitAnim.SetDestination(_trackerTarget.target.transform.position);
+                            _unitAnim.PlayRunAnim();
                         }
-
-                        _unitAnim.LookAtPosition(_trackerTarget.target.transform.position);
-                        _unitAnim.PlayRunAnim();
                     }
                     //# 스킬 사정거리 안에 있는 경우
                     else
                     {
-                        _unitAnim.LookAtPosition(_trackerTarget.target.transform.position);
                         _unitAnim.StopRunAnim();
                     }
                 }
