@@ -22,7 +22,7 @@ public class Demo : MonoBehaviour
 
     private void OnGUI()
     {
-        Rect buttonRect = new Rect(10, 10, 100, 30);
+        Rect buttonRect = new Rect(10, 10, 500, 300);
         if (GUI.Button(buttonRect, "Create"))
         {
             DefEnum.ELayer myLayer = (DefEnum.ELayer)Random.Range((int)DefEnum.ELayer.Red, (int)DefEnum.ELayer.Blue + 1);
@@ -33,7 +33,8 @@ public class Demo : MonoBehaviour
             else
                 enemyLayer= DefEnum.ELayer.Red;
 
-            CHMUnit.Instance.CreateUnit(transform, (DefEnum.EUnit)Random.Range((int)DefEnum.EUnit.None, (int)DefEnum.EUnit.Max), myLayer, enemyLayer,
+            var unit = (DefEnum.EUnit)Random.Range((int)DefEnum.EUnit.None, (int)DefEnum.EUnit.Max);
+            CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.White, myLayer, enemyLayer,
                 new Vector3(Random.Range(-20f, 20f), 0, Random.Range(-20f, 20f)));
         }
     }

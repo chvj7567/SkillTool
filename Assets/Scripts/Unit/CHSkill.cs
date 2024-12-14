@@ -94,7 +94,7 @@ public class CHSkill
             var dirMainTarget = posMainTarget - posMy;
 
             //# 1¹ø ½ºÅ³
-            if ((_skill1Lock == false) && _useSkill1 && _unitInfo.IsNormal)
+            if ((_skill1Lock == false) && _useSkill1 && _unitInfo.IsIdle)
             {
                 if ((_skill1Channeling == false) && (_timeSinceLastSkill1 < 0f) && (mainTarget.distance <= _skill1Data.distance))
                 {

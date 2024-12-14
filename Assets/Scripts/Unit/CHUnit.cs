@@ -15,7 +15,7 @@ public interface IUnitInfo
     public DefEnum.EStandardAxis StandardAxis { get; }
     public DefEnum.ESkill Skill1Type { get; }
 
-    public bool IsNormal { get; }
+    public bool IsIdle { get; }
     public bool IsDie { get; }
     public bool IsAirborne { get; }
     public bool IsOnNavMesh { get; }
@@ -55,13 +55,11 @@ public interface IUnitGauge
 public interface IUnitAnim
 {
     public void LookAtPosition(Vector3 destPos);
-    public void SetDestination(Vector3 destPos);
     public void SetAttackAnim();
     public void SetSightAnim(bool sight);
     public float GetSkillAnimTime(DefEnum.EAnim eAnim);
-    public void PlayRunAnim();
-    public void StopRunAnim();
-    public bool CanMove();
+    public void Move(Vector3 destPos);
+    public void Stop();
 }
 
 public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
@@ -69,6 +67,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     #region Parameter
     [Header("캐릭터 정보")]
     [SerializeField, ReadOnly] int _unitID;
+    [SerializeField, ReadOnly] DefEnum.EUnitState _unitState;
     [SerializeField, ReadOnly] float _maxHp;
     [SerializeField, ReadOnly] float _maxMp;
     [SerializeField, ReadOnly] float _curHp;
@@ -131,7 +130,6 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     public bool ShowHp { get; set; }
     public bool ShowMp { get; set; }
     public bool ShowCoolTime { get; set; }
-    public DefEnum.EUnitState MyUnitState { get; private set; }
     public int Layer
     {
         get
@@ -212,7 +210,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                 _dicAnimTime.Add(clip.name, clip.length);
         }
 
-        MyUnitState = DefEnum.EUnitState.Normal;
+        _unitState = DefEnum.EUnitState.Idle;
         _maxHp = _bonusHp;
         _maxMp = _bonusMp;
         _curHp = _bonusHp;
@@ -350,9 +348,10 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 
     #region Getter
     public DefClass.TargetInfo Target => _targetTracker.GetClosestTargetInfo();
-    public bool IsNormal => MyUnitState == DefEnum.EUnitState.Normal;
-    public bool IsDie => (MyUnitState & DefEnum.EUnitState.IsDie) != 0;
-    public bool IsAirborne => (MyUnitState & DefEnum.EUnitState.IsAirborne) != 0;
+    public bool IsIdle => _unitState == DefEnum.EUnitState.Idle;
+    public bool IsRun => _unitState == DefEnum.EUnitState.Run;
+    public bool IsDie => _unitState == DefEnum.EUnitState.Die;
+    public bool IsAirborne => _unitState == DefEnum.EUnitState.Airborne;
     public bool IsOnNavMesh => _agent.isOnNavMesh;
 
     public DefEnum.ESkill Skill1Type => _unitData.eSkill1;
@@ -525,11 +524,6 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
         }
     }
 
-    public void SetDestination(Vector3 destPos)
-    {
-        _agent.SetDestination(destPos);
-    }
-
     public void SetAgentSpeed(float speed)
     {
         _agent.speed = speed;
@@ -545,24 +539,20 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
         _agent.angularSpeed = angularSpeed;
     }
 
-    public bool CanMove()
+    public void Move(Vector3 destPos)
     {
-        if (IsNormal == false)
-            return false;
+        if (IsIdle == false || IsDie)
+            return;
 
-        AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-        if (stateInfo.IsName("Shoot_SingleShot_AR"))
-            return false;
-
-        return true;
-    }
-
-    public void PlayRunAnim()
-    {
         _animator.SetBool(SightRange, true);
+
+        if (IsOnNavMesh)
+        {
+            _agent.SetDestination(destPos);
+        }
     }
 
-    public void StopRunAnim()
+    public void Stop()
     {
         _agent.velocity = Vector3.zero;
 
@@ -580,11 +570,11 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 
         if (isAirborne)
         {
-            MyUnitState |= DefEnum.EUnitState.IsAirborne;
+            _unitState = DefEnum.EUnitState.Airborne;
         }
         else
         {
-            MyUnitState &= ~DefEnum.EUnitState.IsAirborne;
+            _unitState = DefEnum.EUnitState.Idle;
         }
     }
 
@@ -740,7 +730,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
             _animator.SetBool(SightRange, false);
             _animator.SetTrigger(Die);
 
-            MyUnitState |= DefEnum.EUnitState.IsDie;
+            _unitState = DefEnum.EUnitState.Die;
 
             _unitCollider.enabled = false;
 

@@ -219,9 +219,11 @@ public partial class DefEnum
     [Flags]
     public enum EUnitState
     {
-        Normal = 0,
-        IsDie = 1 << 0,
-        IsAirborne = 1 << 1,
+        None = 0,
+        Idle,
+        Run,
+        Die,
+        Airborne,
     }
 
     public enum EDecal

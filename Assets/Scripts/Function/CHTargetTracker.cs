@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static DefEnum;
 
 [Serializable]
 public class CHTargetTracker
@@ -46,7 +45,10 @@ public class CHTargetTracker
     {
         //# 죽었으면 타겟 감지 X
         if (_unitInfo.IsDie)
+        {
+            _unitAnim.Stop();
             return;
+        }
 
         //# 감지된 타겟, 추적 중인 타겟이 모두 없는 경우
         if (_trackerTarget.target == null)
@@ -66,7 +68,7 @@ public class CHTargetTracker
                     break;
             }
 
-            _unitAnim.StopRunAnim();
+            _unitAnim.Stop();
         }
         //# 감지된 타겟이 있거나 추적 중인 타겟이 있는 경우
         else
@@ -88,23 +90,17 @@ public class CHTargetTracker
                 _unitAnim.LookAtPosition(_trackerTarget.target.transform.position);
 
                 //# 공격 가능한 상태이면(CC 등 안 걸려있는 상태인지)
-                if (_unitInfo.IsNormal)
+                if (_unitInfo.IsIdle)
                 {
                     //# 스킬 사정거리 밖에 있는 경우
                     if (_trackerTarget.distance > _skill1Distance)
                     {
-                        //# 움직일 수 있다면
-                        if (_unitInfo.IsOnNavMesh && _unitAnim.CanMove())
-                        {
-                            //# 타겟 위치를 갱신하여 쫒아감
-                            _unitAnim.SetDestination(_trackerTarget.target.transform.position);
-                            _unitAnim.PlayRunAnim();
-                        }
+                        _unitAnim.Move(_trackerTarget.target.transform.position);
                     }
                     //# 스킬 사정거리 안에 있는 경우
                     else
                     {
-                        _unitAnim.StopRunAnim();
+                        _unitAnim.Stop();
                     }
                 }
             }
