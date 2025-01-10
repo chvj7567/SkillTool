@@ -7,10 +7,10 @@ using UniRx;
 using UniRx.Triggers;
 using UnityEngine;
 using UnityEngine.AI;
-using static DefEnum;
 
 public interface IUnitInfo
 {
+    public int UnitID { get; }
     public DefEnum.EUnit UnitType { get; }
     public DefEnum.EStandardAxis StandardAxis { get; }
     public DefEnum.ESkill Skill1Type { get; }
@@ -64,32 +64,60 @@ public interface IUnitAnim
 
 public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 {
+    [Serializable]
+    private class CharacterInfo
+    {
+        public int unitID;
+        public DefEnum.EUnitState unitState;
+        public float maxHp;
+        public float maxMp;
+        public float curHp;
+        public float curMp;
+        public float bonusHp;
+        public float bonusMp;
+
+        public UnitData unitData;
+        public LevelData levelData;
+    }
+
+    [Serializable]
+    private class CharacterFunction
+    {
+        public CHTargetTracker targetTracker;
+        public CHSkill skill;
+    }
+
+    [Serializable]
+    private class CharacterController
+    {
+        public NavMeshAgent agent;
+        public Animator animator;
+        public Collider collider;
+        public List<string> liAnimName = new List<string>
+        {
+            "Idle_Guard_AR",
+            "Shoot_SingleShot_AR",
+            "Run_guard_AR",
+            "Die"
+        };
+
+        public Dictionary<string, float> dicAnimTime = new Dictionary<string, float>();
+    }
+
     #region Parameter
-    [Header("캐릭터 정보")]
-    [SerializeField, ReadOnly] int _unitID;
-    [SerializeField, ReadOnly] DefEnum.EUnitState _unitState;
-    [SerializeField, ReadOnly] float _maxHp;
-    [SerializeField, ReadOnly] float _maxMp;
-    [SerializeField, ReadOnly] float _curHp;
-    [SerializeField, ReadOnly] float _curMp;
-    [SerializeField, ReadOnly] float _bonusHp;
-    [SerializeField, ReadOnly] float _bonusMp;
+    [Header("캐릭터 정보"), SerializeField, ReadOnly]
+    private CharacterInfo _characterInfo;
 
-    [SerializeField] NavMeshAgent _agent;
-    [SerializeField] Animator _animator;
-    [SerializeField] Collider _unitCollider;
-    [SerializeField] List<string> _liAnimName = new List<string>();
-    [SerializeField] CHTargetTracker _targetTracker = new CHTargetTracker();
-    [SerializeField] CHSkill _skill;
+    [Header("캐릭터 컨트롤러"), SerializeField]
+    private CharacterController _characterController;
 
-    CHGaugeBar _gaugeBarHP;
-    CHGaugeBar _gaugeBarMP;
-    CHGaugeBar _gaugeBarCT;
+    [Header("캐릭터 기능"), SerializeField]
+    private CharacterFunction _characterFunction;
 
-    UnitData _unitData;
-    LevelData _levelData;
-
-    Dictionary<string, float> _dicAnimTime = new Dictionary<string, float>();
+    private CHGaugeBar _gaugeBarHP;
+    private CHGaugeBar _gaugeBarMP;
+    private CHGaugeBar _gaugeBarCT;
+    
     CancellationTokenSource _cancleTokenSource;
     Sequence _seqAirborn;
     IDisposable _disposePerSecond;
@@ -102,7 +130,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         get
         {
-            return _targetTracker.StandardAxis;
+            return _characterFunction.targetTracker.StandardAxis;
         }
     }
 
@@ -110,11 +138,11 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         get
         {
-            return _targetTracker.TargetMask;
+            return _characterFunction.targetTracker.TargetMask;
         }
         set
         {
-            _targetTracker.SetTargetMask(value);
+            _characterFunction.targetTracker.SetTargetMask(value);
         }
     }
 
@@ -122,7 +150,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         get
         {
-            return _targetTracker.IgnoreMask;
+            return _characterFunction.targetTracker.IgnoreMask;
         }
     }
 
@@ -143,6 +171,13 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     }
     #endregion
 
+    private void Awake()
+    {
+        _characterController.agent = GetComponent<NavMeshAgent>();
+        _characterController.animator = GetComponent<Animator>();
+        _characterController.collider = GetComponent<Collider>();
+    }
+
     private void OnDisable()
     {
         if (_seqAirborn != null && _seqAirborn.IsComplete() == false)
@@ -157,8 +192,8 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 
     private void Update()
     {
-        _skill.OnUpdate();
-        _targetTracker.OnUpdate();
+        _characterFunction.skill.OnUpdate();
+        _characterFunction.targetTracker.OnUpdate();
     }
 
     private void OnDestroy()
@@ -171,7 +206,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 
     private void OnDrawGizmos()
     {
-        _targetTracker.OnDrawGizmos();
+        _characterFunction.targetTracker.OnDrawGizmos();
     }
 
     #region Initialize
@@ -183,7 +218,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
         _initialize = true;
         _cancleTokenSource = new CancellationTokenSource();
 
-        _unitID = unitID;
+        _characterInfo.unitID = unitID;
         InitUnitData();
         InitGaugeBar(ShowHp, ShowMp, ShowCoolTime);
 
@@ -195,36 +230,36 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                     return;
 
                 //# 초당 Hp/Mp 회복 적용
-                ChangeHp(DefEnum.ESkill.None, this, _unitData.hpRegenPerSecond, DefEnum.EDamageType1.None);
-                ChangeMp(DefEnum.ESkill.None, this, _unitData.mpRegenPerSecond, DefEnum.EDamageType1.None);
+                ChangeHp(DefEnum.ESkill.None, this, _characterInfo.unitData.hpRegenPerSecond, DefEnum.EDamageType1.None);
+                ChangeMp(DefEnum.ESkill.None, this, _characterInfo.unitData.mpRegenPerSecond, DefEnum.EDamageType1.None);
             });
     }
 
     void InitUnitData()
     {
-        RuntimeAnimatorController ac = _animator.runtimeAnimatorController;
+        RuntimeAnimatorController ac = _characterController.animator.runtimeAnimatorController;
 
         foreach (AnimationClip clip in ac.animationClips)
         {
-            if (_dicAnimTime.TryGetValue(clip.name, out var time) == false)
-                _dicAnimTime.Add(clip.name, clip.length);
+            if (_characterController.dicAnimTime.TryGetValue(clip.name, out var time) == false)
+                _characterController.dicAnimTime.Add(clip.name, clip.length);
         }
 
-        _unitState = DefEnum.EUnitState.Idle;
-        _maxHp = _bonusHp;
-        _maxMp = _bonusMp;
-        _curHp = _bonusHp;
-        _curMp = _bonusMp;
-        _unitCollider.enabled = true;
+        _characterInfo.unitState = DefEnum.EUnitState.Idle;
+        _characterInfo.maxHp = _characterInfo.bonusHp;
+        _characterInfo.maxMp = _characterInfo.bonusMp;
+        _characterInfo.curHp = _characterInfo.bonusHp;
+        _characterInfo.curMp = _characterInfo.bonusMp;
+        _characterController.collider.enabled = true;
 
         if (UnitType == DefEnum.EUnit.None)
         {
             UnitType = (DefEnum.EUnit)UnityEngine.Random.Range(1, (int)DefEnum.EUnit.White);
         }
 
-        _unitData = CHMUnit.Instance.GetUnitData(UnitType);
+        _characterInfo.unitData = CHMUnit.Instance.GetUnitData(UnitType);
 
-        if (_unitData == null)
+        if (_characterInfo.unitData == null)
         {
             Debug.Log($"{UnitType} UnitData is null");
         }
@@ -233,24 +268,24 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
             SetAgentSpeed(GetCurrentMoveSpeed());
             SetAgentAngularSpeed(GetCurrentRotateSpeed());
 
-            _maxHp += _unitData.maxHp;
-            _maxMp += _unitData.maxMp;
-            _curHp += _unitData.maxHp;
-            _curMp += _unitData.maxMp;
+            _characterInfo.maxHp += _characterInfo.unitData.maxHp;
+            _characterInfo.maxMp += _characterInfo.unitData.maxMp;
+            _characterInfo.curHp += _characterInfo.unitData.maxHp;
+            _characterInfo.curMp += _characterInfo.unitData.maxMp;
 
             CHMUnit.Instance.SetUnit(this, UnitType);
 
-            _skill.Init(_cancleTokenSource, this, this, this);
-            _targetTracker.Init(this, this);
+            _characterFunction.skill.Init(_cancleTokenSource, this, this, this);
+            _characterFunction.targetTracker.Init(this, this);
 
-            _levelData = CHMLevel.Instance.GetLevelData(UnitType, _unitData.eLevel);
+            _characterInfo.levelData = CHMLevel.Instance.GetLevelData(UnitType, _characterInfo.unitData.eLevel);
 
-            if (_levelData != null)
+            if (_characterInfo.levelData != null)
             {
-                _maxHp += _levelData.maxHp;
-                _maxMp += _levelData.maxMp;
-                _curHp += _levelData.maxHp;
-                _curMp += _levelData.maxMp;
+                _characterInfo.maxHp += _characterInfo.levelData.maxHp;
+                _characterInfo.maxMp += _characterInfo.levelData.maxMp;
+                _characterInfo.curHp += _characterInfo.levelData.maxHp;
+                _characterInfo.curMp += _characterInfo.levelData.maxMp;
             }
         }
     }
@@ -269,12 +304,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                     _gaugeBarHP = gaugeBar.GetComponent<CHGaugeBar>();
                     if (_gaugeBarHP)
                     {
-                        if (_unitCollider == null)
-                        {
-                            _unitCollider = gameObject.GetOrAddComponent<Collider>();
-                        }
-
-                        _gaugeBarHP.Init(_unitCollider.bounds.size.y / 2f / base.transform.localScale.x, 2.3f);
+                        _gaugeBarHP.Init(_characterController.collider.bounds.size.y / 2f / base.transform.localScale.x, 2.3f);
                         _gaugeBarHP.SetGaugeBar(1, 1, 0);
                     }
                 }
@@ -298,12 +328,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                     _gaugeBarMP = gaugeBar.GetComponent<CHGaugeBar>();
                     if (_gaugeBarMP)
                     {
-                        if (_unitCollider == null)
-                        {
-                            _unitCollider = gameObject.GetOrAddComponent<Collider>();
-                        }
-
-                        _gaugeBarMP.Init(_unitCollider.bounds.size.y / 2f / base.transform.localScale.x, 1.7f);
+                        _gaugeBarMP.Init(_characterController.collider.bounds.size.y / 2f / base.transform.localScale.x, 1.7f);
                         _gaugeBarMP.SetGaugeBar(1, 1, 0f);
                     }
                 }
@@ -327,12 +352,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
                     _gaugeBarCT = gaugeBar.GetComponent<CHGaugeBar>();
                     if (_gaugeBarCT)
                     {
-                        if (_unitCollider == null)
-                        {
-                            _unitCollider = gameObject.GetOrAddComponent<Collider>();
-                        }
-
-                        _gaugeBarCT.Init(_unitCollider.bounds.size.y / 2f / base.transform.localScale.x, -2f);
+                        _gaugeBarCT.Init(_characterController.collider.bounds.size.y / 2f / base.transform.localScale.x, -2f);
                         _gaugeBarCT.SetGaugeBar(1, 1, 0f);
                     }
                 }
@@ -347,14 +367,15 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     #endregion
 
     #region Getter
-    public DefClass.TargetInfo Target => _targetTracker.GetClosestTargetInfo();
-    public bool IsIdle => _unitState == DefEnum.EUnitState.Idle;
-    public bool IsRun => _unitState == DefEnum.EUnitState.Run;
-    public bool IsDie => _unitState == DefEnum.EUnitState.Die;
-    public bool IsAirborne => _unitState == DefEnum.EUnitState.Airborne;
-    public bool IsOnNavMesh => _agent.isOnNavMesh;
+    public int UnitID => _characterInfo.unitID;
+    public DefClass.TargetInfo Target => _characterFunction.targetTracker.GetClosestTargetInfo();
+    public bool IsIdle => _characterInfo.unitState == DefEnum.EUnitState.Idle;
+    public bool IsRun => _characterInfo.unitState == DefEnum.EUnitState.Run;
+    public bool IsDie => _characterInfo.unitState == DefEnum.EUnitState.Die;
+    public bool IsAirborne => _characterInfo.unitState == DefEnum.EUnitState.Airborne;
+    public bool IsOnNavMesh => _characterController.agent.isOnNavMesh;
 
-    public DefEnum.ESkill Skill1Type => _unitData.eSkill1;
+    public DefEnum.ESkill Skill1Type => _characterInfo.unitData.eSkill1;
 
     public int AttackRange
     {
@@ -384,7 +405,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         float maxHp = 0f;
 
-        maxHp += _unitData.maxHp;
+        maxHp += _characterInfo.unitData.maxHp;
 
         return maxHp;
     }
@@ -392,7 +413,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         float hpRegenPerSecond = 0f;
 
-        hpRegenPerSecond += _unitData.hpRegenPerSecond;
+        hpRegenPerSecond += _characterInfo.unitData.hpRegenPerSecond;
 
         return hpRegenPerSecond;
     }
@@ -400,7 +421,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         float maxMp = 0f;
 
-        maxMp += _unitData.maxMp;
+        maxMp += _characterInfo.unitData.maxMp;
 
         return maxMp;
     }
@@ -408,7 +429,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         float mpRegenPerSecond = 0f;
 
-        mpRegenPerSecond += _unitData.mpRegenPerSecond;
+        mpRegenPerSecond += _characterInfo.unitData.mpRegenPerSecond;
 
         return mpRegenPerSecond;
     }
@@ -416,7 +437,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         float attackPower = 0f;
 
-        attackPower += _unitData.attackPower;
+        attackPower += _characterInfo.unitData.attackPower;
 
         return attackPower;
     }
@@ -424,7 +445,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         float defensePower = 0f;
 
-        defensePower += _unitData.defensePower;
+        defensePower += _characterInfo.unitData.defensePower;
 
         return defensePower;
     }
@@ -432,7 +453,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         float moveSpeed = 0f;
 
-        moveSpeed += _unitData.moveSpeed;
+        moveSpeed += _characterInfo.unitData.moveSpeed;
 
         return moveSpeed;
     }
@@ -440,7 +461,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         float rotateSpeed = 0f;
 
-        rotateSpeed += _unitData.rotateSpeed;
+        rotateSpeed += _characterInfo.unitData.rotateSpeed;
 
         return rotateSpeed;
     }
@@ -448,7 +469,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         float range = 0f;
 
-        range += _unitData.range;
+        range += _characterInfo.unitData.range;
 
         return range;
     }
@@ -456,7 +477,7 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         float rangeMulti = 0f;
 
-        rangeMulti += _unitData.rangeMulti;
+        rangeMulti += _characterInfo.unitData.rangeMulti;
 
         return rangeMulti;
     }
@@ -464,41 +485,41 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
     {
         float viewAngle = 0f;
 
-        viewAngle += _unitData.viewAngle;
+        viewAngle += _characterInfo.unitData.viewAngle;
 
         return viewAngle;
     }
     public float GetCurrentHp()
     {
-        return _curHp;
+        return _characterInfo.curHp;
     }
     public float GetCurrentMp()
     {
-        return _curMp;
+        return _characterInfo.curMp;
     }
     public float GetPlusDamage()
     {
-        return _levelData.damage;
+        return _characterInfo.levelData.damage;
     }
     public float GetCurrentSkill1Distance()
     {
-        return _skill.Skill1Distance;
+        return _characterFunction.skill.Skill1Distance;
     }
     #endregion
 
     public void SetSightAnim(bool sight)
     {
-        _animator.SetBool(SightRange, sight);
+        _characterController.animator.SetBool(SightRange, sight);
     }
 
     public void SetAttackAnim()
     {
-        _animator.SetTrigger(AttackRange);
+        _characterController.animator.SetTrigger(AttackRange);
     }
 
     public float GetSkillAnimTime(DefEnum.EAnim eAnim)
     {
-        return _dicAnimTime[_liAnimName[(int)eAnim]];
+        return _characterController.dicAnimTime[_characterController.liAnimName[(int)eAnim]];
     }
 
     public void LookAtPosition(Vector3 destPos)
@@ -526,17 +547,17 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 
     public void SetAgentSpeed(float speed)
     {
-        _agent.speed = speed;
+        _characterController.agent.speed = speed;
     }
 
     public void SetAgentStoppingDistance(float distance)
     {
-        _agent.stoppingDistance = distance;
+        _characterController.agent.stoppingDistance = distance;
     }
 
     public void SetAgentAngularSpeed(float angularSpeed)
     {
-        _agent.angularSpeed = angularSpeed;
+        _characterController.agent.angularSpeed = angularSpeed;
     }
 
     public void Move(Vector3 destPos)
@@ -544,23 +565,23 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
         if (IsIdle == false || IsDie)
             return;
 
-        _animator.SetBool(SightRange, true);
+        _characterController.animator.SetBool(SightRange, true);
 
         if (IsOnNavMesh)
         {
-            _agent.SetDestination(destPos);
+            _characterController.agent.SetDestination(destPos);
         }
     }
 
     public void Stop()
     {
-        _agent.velocity = Vector3.zero;
+        _characterController.agent.velocity = Vector3.zero;
 
-        _animator.SetBool(SightRange, false);
+        _characterController.animator.SetBool(SightRange, false);
 
         if (IsOnNavMesh)
         {
-            _agent.ResetPath();
+            _characterController.agent.ResetPath();
         }
     }
 
@@ -570,11 +591,11 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 
         if (isAirborne)
         {
-            _unitState = DefEnum.EUnitState.Airborne;
+            _characterInfo.unitState = DefEnum.EUnitState.Airborne;
         }
         else
         {
-            _unitState = DefEnum.EUnitState.Idle;
+            _characterInfo.unitState = DefEnum.EUnitState.Idle;
         }
     }
 
@@ -678,22 +699,22 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
         if (changeLevelData == null)
             return;
 
-        if (_levelData != null)
+        if (_characterInfo.levelData != null)
         {
-            _maxHp += changeLevelData.maxHp - _levelData.maxHp;
-            _maxMp += changeLevelData.maxMp - _levelData.maxMp;
-            _curHp += changeLevelData.maxHp - _levelData.maxHp;
-            _curMp += changeLevelData.maxMp - _levelData.maxMp;
+            _characterInfo.maxHp += changeLevelData.maxHp - _characterInfo.levelData.maxHp;
+            _characterInfo.maxMp += changeLevelData.maxMp - _characterInfo.levelData.maxMp;
+            _characterInfo.curHp += changeLevelData.maxHp - _characterInfo.levelData.maxHp;
+            _characterInfo.curMp += changeLevelData.maxMp - _characterInfo.levelData.maxMp;
         }
         else
         {
-            _maxHp += changeLevelData.maxHp;
-            _maxMp += changeLevelData.maxMp;
-            _curHp += changeLevelData.maxHp;
-            _curMp += changeLevelData.maxMp;
+            _characterInfo.maxHp += changeLevelData.maxHp;
+            _characterInfo.maxMp += changeLevelData.maxMp;
+            _characterInfo.curHp += changeLevelData.maxHp;
+            _characterInfo.curMp += changeLevelData.maxMp;
         }
 
-        _levelData = changeLevelData;
+        _characterInfo.levelData = changeLevelData;
     }
 
     void AtOnceChangeHp(DefEnum.ESkill eSkill, CHUnit attackUnit, float value)
@@ -701,22 +722,22 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
         if (IsDie)
             return;
 
-        float hpOrigin = _curHp;
-        float hpResult = _curHp + value;
-        if (hpResult >= _maxHp)
+        float hpOrigin = _characterInfo.curHp;
+        float hpResult = _characterInfo.curHp + value;
+        if (hpResult >= _characterInfo.maxHp)
         {
-            hpResult = _maxHp;
+            hpResult = _characterInfo.maxHp;
         }
 
-        _curHp = hpResult;
+        _characterInfo.curHp = hpResult;
 
         if (_gaugeBarHP)
-            _gaugeBarHP.SetGaugeBar(_maxHp, this.GetCurrentHp(), value, 1.5f, 1f);
+            _gaugeBarHP.SetGaugeBar(_characterInfo.maxHp, this.GetCurrentHp(), value, 1.5f, 1f);
 
         if (eSkill != DefEnum.ESkill.None)
         {
             Debug.Log($"attacker : {attackUnit.name}, skill : {eSkill.ToString()}, Damage : {value}" +
-            $"{_unitData.unitName}<{gameObject.name}> => Hp : {hpOrigin} -> {hpResult}");
+            $"{_characterInfo.unitData.unitName}<{gameObject.name}> => Hp : {hpOrigin} -> {hpResult}");
         }
 
         //# 죽음 Die
@@ -726,13 +747,13 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 
             hpResult = 0f;
 
-            _animator.SetTrigger(AttackRange);
-            _animator.SetBool(SightRange, false);
-            _animator.SetTrigger(Die);
+            _characterController.animator.SetTrigger(AttackRange);
+            _characterController.animator.SetBool(SightRange, false);
+            _characterController.animator.SetTrigger(Die);
 
-            _unitState = DefEnum.EUnitState.Die;
+            _characterInfo.unitState = DefEnum.EUnitState.Die;
 
-            _unitCollider.enabled = false;
+            _characterController.collider.enabled = false;
 
             if (_gaugeBarHP)
                 _gaugeBarHP.gameObject.SetActive(false);
@@ -743,49 +764,49 @@ public class CHUnit : MonoBehaviour, IUnitInfo, IUnitGauge, IUnitAnim
 
     void AtOnceChangeMp(DefEnum.ESkill eSkill, CHUnit attackUnit, float value)
     {
-        float mpOrigin = _curMp;
-        float mpResult = _curMp + value;
-        if (mpResult >= _maxMp)
+        float mpOrigin = _characterInfo.curMp;
+        float mpResult = _characterInfo.curMp + value;
+        if (mpResult >= _characterInfo.maxMp)
         {
-            mpResult = _maxMp;
+            mpResult = _characterInfo.maxMp;
         }
         else if (mpResult < 0)
         {
             mpResult = 0f;
         }
 
-        _curMp = mpResult;
+        _characterInfo.curMp = mpResult;
 
         if (_gaugeBarMP)
-            _gaugeBarMP.SetGaugeBar(_maxMp, this.GetCurrentMp(), value, 1.5f, 1f, false);
+            _gaugeBarMP.SetGaugeBar(_characterInfo.maxMp, this.GetCurrentMp(), value, 1.5f, 1f, false);
 
         if (eSkill != DefEnum.ESkill.None)
         {
             Debug.Log($"attacker : {attackUnit.name}, skill : {eSkill.ToString()}, " +
-            $"{_unitData.unitName}<{gameObject.name}> => Mp : {mpOrigin} -> {mpResult}");
+            $"{_characterInfo.unitData.unitName}<{gameObject.name}> => Mp : {mpOrigin} -> {mpResult}");
         }
     }
 
     void AtOnceChangeAttackPower(DefEnum.ESkill eSkill, CHUnit attackUnit, float value)
     {
-        float attackPowerOrigin = _unitData.attackPower;
-        float attackPowerResult = _unitData.attackPower + value;
+        float attackPowerOrigin = _characterInfo.unitData.attackPower;
+        float attackPowerResult = _characterInfo.unitData.attackPower + value;
         CheckMaxStatValue(DefEnum.EStat.AttackPower, ref attackPowerResult);
 
-        _unitData.attackPower = attackPowerResult;
+        _characterInfo.unitData.attackPower = attackPowerResult;
         Debug.Log($"attacker : {attackUnit.name}, skill : {eSkill.ToString()}, " +
-            $"{_unitData.unitName}<{gameObject.name}> => AttackPower : {attackPowerOrigin} -> {attackPowerResult}");
+            $"{_characterInfo.unitData.unitName}<{gameObject.name}> => AttackPower : {attackPowerOrigin} -> {attackPowerResult}");
     }
 
     void AtOnceChangeDefensePower(DefEnum.ESkill eSkill, CHUnit attackUnit, float value)
     {
-        float defensePowerOrigin = _unitData.defensePower;
-        float defensePowerResult = _unitData.defensePower + value;
+        float defensePowerOrigin = _characterInfo.unitData.defensePower;
+        float defensePowerResult = _characterInfo.unitData.defensePower + value;
         CheckMaxStatValue(DefEnum.EStat.DefensePower, ref defensePowerResult);
 
-        _unitData.attackPower = defensePowerResult;
+        _characterInfo.unitData.attackPower = defensePowerResult;
         Debug.Log($"attacker : {attackUnit.name}, skill : {eSkill.ToString()}, " +
-            $"{_unitData.unitName}<{gameObject.name}> => DefensePower : {defensePowerOrigin} -> {defensePowerResult}");
+            $"{_characterInfo.unitData.unitName}<{gameObject.name}> => DefensePower : {defensePowerOrigin} -> {defensePowerResult}");
     }
 
     async void ContinuousChangeHp(DefEnum.ESkill eSkill, CHUnit attackUnit, float time, int count, float value)

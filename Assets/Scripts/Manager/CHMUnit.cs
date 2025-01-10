@@ -136,7 +136,7 @@ public class CHMUnit : CHSingleton<CHMUnit>
             unit.transform.SetParent(parent);
 
             _dicUnit.Add(++curUnitID, unit);
-            if (eTargetLayer == DefEnum.ELayer.Red)
+            if (eTeamLayer == DefEnum.ELayer.Red)
             {
                 unit.name = $"{eUnit} Unit {curUnitID}(Red)";
             }

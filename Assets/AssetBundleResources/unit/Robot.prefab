@@ -2792,45 +2792,50 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dcbf299daf98c264fb13b81edc36b347, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _agent: {fileID: 75704831234924894}
-  _animator: {fileID: 2836004473841745626}
-  _unitCollider: {fileID: 3834797451396584039}
-  _targetTracker:
-    _standardAxis: 3
-    _targetMask:
-      serializedVersion: 2
-      m_Bits: 0
-    _ignoreMask:
-      serializedVersion: 2
-      m_Bits: 4
-    _range: 0
-    _rangeMulti: 2
-    _rangeMultiTime: 3
-    _viewAngle: 0
-    _orgRangeMulti: -1
-    _orgViewAngle: -1
-    _skill1Distance: -1
-    _trackerTarget:
-      target: {fileID: 0}
-      distance: -1
-  _liAnimName:
-  - Idle_Guard_AR
-  - Shoot_SingleShot_AR
-  - Run_guard_AR
-  - Die
-  _skill:
-    _skill1Data: {fileID: 0}
-    _useSkill1: 1
-    _skill1NoCoolClick: 0
-    _skill1Lock: 0
-    _skill1Channeling: 0
-    _timeSinceLastSkill1: -1
-  _maxHp: 0
-  _maxMp: 0
-  _curHp: 0
-  _curMp: 0
-  _bonusHp: 0
-  _bonusMp: 0
+  _characterInfo:
+    unitID: 0
+    unitState: 0
+    maxHp: 0
+    maxMp: 0
+    curHp: 0
+    curMp: 0
+    bonusHp: 0
+    bonusMp: 0
+    unitData: {fileID: 0}
+    levelData: {fileID: 0}
+  _characterController:
+    agent: {fileID: 0}
+    animator: {fileID: 0}
+    collider: {fileID: 0}
+    liAnimName:
+    - Idle_Guard_AR
+    - Shoot_SingleShot_AR
+    - Run_guard_AR
+    - Die
+  _characterFunction:
+    targetTracker:
+      _standardAxis: 3
+      _targetMask:
+        serializedVersion: 2
+        m_Bits: 0
+      _ignoreMask:
+        serializedVersion: 2
+        m_Bits: 0
+      _range: 0
+      _rangeMulti: 2
+      _rangeMultiTime: 3
+      _viewAngle: 0
+      _skill1Distance: -1
+      _trackerTarget:
+        target: {fileID: 0}
+        distance: -1
+    skill:
+      _skill1Data: {fileID: 0}
+      _useSkill1: 1
+      _skill1NoCoolClick: 0
+      _skill1Lock: 0
+      _skill1Channeling: 0
+      _timeSinceLastSkill1: -1
 --- !u!136 &3834797451396584039
 CapsuleCollider:
   m_ObjectHideFlags: 0

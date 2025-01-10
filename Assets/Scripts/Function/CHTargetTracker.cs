@@ -14,10 +14,6 @@ public class CHTargetTracker
     [SerializeField, ReadOnly] float _rangeMultiTime = 3; // 타겟을 감지 후 시야가 늘어나는 시간(초)
     [SerializeField, ReadOnly, Range(0, 360)] float _viewAngle; // 타겟을 감지할 시야각
 
-    [Header("원본 값")]
-    [SerializeField, ReadOnly] float _orgRangeMulti = -1f;
-    [SerializeField, ReadOnly] float _orgViewAngle = -1f;
-
     [Header("스킬 사정거리")]
     [SerializeField, ReadOnly] float _skill1Distance = -1f;
 
@@ -34,10 +30,8 @@ public class CHTargetTracker
 
         _range = _unitInfo.GetCurrentRange();
         _rangeMulti = _unitInfo.GetCurrentRangeMulti();
-        _orgRangeMulti = _rangeMulti;
         _rangeMulti = 1f;
         _viewAngle = _unitInfo.GetCurrentViewAngle();
-        _orgViewAngle = _viewAngle;
         _skill1Distance = _unitInfo.GetCurrentSkill1Distance();
     }
 
