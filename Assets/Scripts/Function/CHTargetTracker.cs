@@ -11,7 +11,6 @@ public class CHTargetTracker
     [SerializeField] LayerMask _ignoreMask; // 무시할 레이어
     [SerializeField, ReadOnly] float _range; // 타겟을 감지할 범위
     [SerializeField, ReadOnly] float _rangeMulti = 2; // 타겟을 감지 후 늘어나는 시야 배수
-    [SerializeField, ReadOnly] float _rangeMultiTime = 3; // 타겟을 감지 후 시야가 늘어나는 시간(초)
     [SerializeField, ReadOnly, Range(0, 360)] float _viewAngle; // 타겟을 감지할 시야각
 
     [Header("스킬 사정거리")]

@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Demo : MonoBehaviour
 {
+    private DefEnum.ELayer _curCreateTeam = DefEnum.ELayer.Red;
+    private DefEnum.EUnit _curUnit = DefEnum.EUnit.None;
+
     private void Start()
     {
         Init();
@@ -22,20 +25,20 @@ public class Demo : MonoBehaviour
 
     private void OnGUI()
     {
-        Rect buttonRect = new Rect(10, 10, 500, 300);
+        Rect buttonRect = new Rect(10, 10, Screen.width / 10f, Screen.height / 5f);
         if (GUI.Button(buttonRect, "Create"))
         {
-            DefEnum.ELayer myLayer = (DefEnum.ELayer)Random.Range((int)DefEnum.ELayer.Red, (int)DefEnum.ELayer.Blue + 1);
-            DefEnum.ELayer enemyLayer;
+            DefEnum.ELayer enemyLayer = _curCreateTeam == DefEnum.ELayer.Red ? DefEnum.ELayer.Blue : DefEnum.ELayer.Red;
 
-            if (myLayer == DefEnum.ELayer.Red)
-                enemyLayer = DefEnum.ELayer.Blue;
-            else
-                enemyLayer= DefEnum.ELayer.Red;
+            if (_curUnit + 1 == DefEnum.EUnit.Max)
+            {
+                _curUnit = DefEnum.EUnit.None;
+            }
 
-            var unit = (DefEnum.EUnit)Random.Range((int)DefEnum.EUnit.None, (int)DefEnum.EUnit.Max);
-            CHMUnit.Instance.CreateUnit(transform, DefEnum.EUnit.White, myLayer, enemyLayer,
+            CHMUnit.Instance.CreateUnit(transform, ++_curUnit, _curCreateTeam, enemyLayer,
                 new Vector3(Random.Range(-20f, 20f), 0, Random.Range(-20f, 20f)));
+
+            _curCreateTeam = _curCreateTeam == DefEnum.ELayer.Red ? DefEnum.ELayer.Blue : DefEnum.ELayer.Red;
         }
     }
 }
